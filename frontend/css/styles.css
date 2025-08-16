@@ -1,0 +1,247 @@
+/* ========== Thème & reset ========== */
+:root {
+  --bg: #0f172a;
+  --card: #111827;
+  --muted: #94a3b8;
+  --txt: #e5e7eb;
+  --accent: #60a5fa;
+  --border: #1f2937;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+  color: var(--txt);
+  background: var(--bg);
+}
+
+/* ========== Layout global ========== */
+header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: .2px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 16px;
+  padding: 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+/* Centrage page de login */
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  width: 520px;
+  max-width: 92vw;
+}
+
+/* ========== Form controls ========== */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select {
+  width: 420px;
+  max-width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #0b1220;
+  color: var(--txt);
+}
+
+button {
+  padding: 10px 14px;
+  border: 1px solid #21304a;
+  background: #0b1a2e;
+  color: var(--txt);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #0b2a4e;
+  border-color: #1e3a8a;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* ========== Texte utilitaire ========== */
+.small { font-size: 12px; }
+.muted { color: var(--muted); }
+.ok    { color: #34d399; }
+.err   { color: #fca5a5; white-space: pre-wrap; }
+
+/* ========== Arbre des thèmes ========== */
+.list { margin: 0; padding-left: 0; list-style: none; }
+
+.node { padding: 6px 8px; border-radius: 8px; }
+.node:hover { background: #0b1220; }
+
+details > summary { cursor: pointer; user-select: none; }
+
+.tag {
+  font-size: 12px;
+  color: #93c5fd;
+  background: #0b2a4e;
+  border: 1px solid #1e40af;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.toolbar { display: flex; gap: 8px; margin-top: 8px; }
+
+.node.sel > summary,
+.node.sel > span {
+  background: #0b1220;
+  border-radius: 6px;
+}
+
+/* ========== Tableau "Recherche personnes" ========== */
+.table-wrap {
+  max-height: 55vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: #0b1220;
+  z-index: 1;
+}
+
+thead th,
+tbody td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr:nth-child(odd) {
+  background: rgba(255,255,255,.02);
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; }
+}
+
+/* grille générale de l'app */
+.layout {
+  display: grid;
+  grid-template-columns: 360px 1fr; /* gauche = arbre + détails, droite = personnes */
+  gap: 16px;
+  padding: 16px;
+}
+
+/* pile Thèmes + Détails à gauche */
+.col-left {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+/* la liste personnes doit scroller indépendamment */
+.col-right .table-wrap { max-height: 65vh; }
+
+/* —————— thèmes / détails / cartes / header de tableau —————— */
+:root { --bg:#0f172a; --card:#111827; --muted:#94a3b8; --txt:#e5e7eb; --accent:#60a5fa; }
+* { box-sizing: border-box; }
+body { margin:0; font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; background:var(--bg); color:var(--txt); }
+header { padding:18px 20px; border-bottom:1px solid #1f2937; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+header h1 { margin:0; font-size:18px; letter-spacing:.2px; }
+.row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+input[type="text"], input[type="password"], input[type="number"] { width:420px; max-width:100%; padding:10px 12px; border:1px solid #1f2937; border-radius:10px; background:#0b1220; color:var(--txt); }
+select { padding:10px 12px; border:1px solid #1f2937; border-radius:10px; background:#0b1220; color:var(--txt); }
+button { padding:10px 14px; border:1px solid #21304a; background:#0b1a2e; color:var(--txt); border-radius:10px; cursor:pointer; }
+button.primary { background:#0b2a4e; border-color:#1e3a8a; }
+button:disabled { opacity:.5; cursor:not-allowed; }
+.card { background:var(--card); border:1px solid #1f2937; border-radius:14px; padding:14px; }
+.muted { color:var(--muted); }
+.ok { color:#34d399; }
+.err { color:#fca5a5; white-space:pre-wrap; }
+.list { margin:0; padding-left:0; list-style:none; }
+.node { padding:6px 8px; border-radius:8px; }
+.node:hover { background:#0b1220; }
+details > summary { cursor:pointer; user-select:none; }
+.tag { font-size:12px; color:#93c5fd; background:#0b2a4e; border:1px solid #1e40af; padding:2px 8px; border-radius:999px; }
+.toolbar { display:flex; gap:8px; margin-top:8px; }
+.small { font-size:12px; }
+.center { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.login-card { width:520px; max-width:92vw; }
+
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; } /* mobile : tout en colonne */
+}
+
+/* table scrolable + entête collante */
+.table-wrap { overflow:auto; border:1px solid #1f2937; border-radius:10px; margin-top:8px; }
+table { width:100%; border-collapse:separate; border-spacing:0; }
+thead th { position:sticky; top:0; background:#0b1220; z-index:1; }
+thead th, tbody td { padding:8px 10px; border-bottom:1px solid #1f2937; }
+tbody tr:nth-child(odd) { background: rgba(255,255,255,.02); }
+.node.sel > summary, .node.sel > span { background:#0b1220; border-radius:6px; }
+.small.muted.inline { display:inline-block; margin-left:6px; }
+
+/* griser les actions désactivées */
+#peopleTbl button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.picker-wrap { position: relative; }
+.picker-chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+.chip { background:#0b2a4e; border:1px solid #1e3a8a; color:#cfe8ff; padding:2px 8px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; }
+.chip-x { background:none; border:0; color:#cfe8ff; cursor:pointer; font-size:14px; line-height:1; }
+.picker-list {
+  position:absolute; left:0; right:0; top:100%;
+  background:#0b1220; border:1px solid #1f2937; border-radius:8px;
+  max-height:220px; overflow:auto; z-index:20; margin-top:4px;
+}
+.picker-item { padding:8px 10px; cursor:pointer; }
+.picker-item:hover { background:#0f1a30; }

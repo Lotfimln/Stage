@@ -1,0 +1,4 @@
+Flask==3.0.3
+Flask-Cors==4.0.1
+oracledb==2.4.1
+python-dotenv==1.0.1

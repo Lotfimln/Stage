@@ -1,0 +1,564 @@
+"CS_TH_COD#","THEME","NIVEAU","THEME_PARENT"
+206,Machine Learning,0,
+241,Mathematics of Computing,0,
+271,Network and Computer Systems Organisations,0,
+340,Security,0,
+420,"Signal, Images and Graphics",0,
+480,Software and Systems Engineering,0,
+484,Theory of Computation,0,
+492,Applications,0,
+1,Artificial Intelligence,0,
+49,Computing methodologies,0,
+90,Human Centered Computing,0,
+131,Information Systems,0,
+485,Models of computation,1,484
+486,Formal languages and automata theory,1,484
+487,Computational complexity and cryptography,1,484
+488,Logic,1,484
+489,Design and analysis of algorithms,1,484
+490,Theory and algorithms for application domains,1,484
+491,Semantics and reasoning,1,484
+493,Accessibility,1,492
+494,Art / Music / Creativity,1,492
+495,Astronomy,1,492
+496,Bioinformatics,1,492
+497,Biometrics,1,492
+498,"Building Design, Architecture",1,492
+499,Business / Marketing / Advertising / E-commerce,1,492
+2,Knowledge Representation and Reasoning,1,1
+22,Distributed AI,1,1
+27,Natural language processing,1,1
+50,Parallel computing methodologies,1,49
+51,Modeling and simulation,1,49
+52,Distributed computing methodologies,1,49
+53,"Decision, Planning and Scheduling",1,49
+71,Constraint Satisfaction and Optimization,1,49
+81,Evolutionary computation,1,49
+91,Cognitive Systems,1,90
+102,"Extended Reality - Virtual, Augmented Reality",1,90
+108,Human Computer Interaction,1,90
+116,Scientific Visualization,1,90
+122,Technology Enhanced Learning,1,90
+132,Data management systems,1,131
+147,Information retrieval,1,131
+174,Data Mining & KDD,1,131
+198,World Wide Web,1,131
+207,Supervised learning,1,206
+212,Unsupervised learning,1,206
+217,Deep learning,1,206
+222,Reinforcement learning,1,206
+223,Symbolic learning,1,206
+224,Other learning paradigms,1,206
+231,Learning theory,1,206
+236,Trustworthy machine learning,1,206
+242,Probability and statistics,1,241
+252,Numerical analysis,1,241
+253,Optimization,1,241
+261,Differential equations,1,241
+262,Calculus,1,241
+263,Functional analysis,1,241
+264,Discrete mathematics,1,241
+267,Mathematical software,1,241
+272,Architectures,1,271
+288,Systems,1,271
+314,Networks,1,271
+341,"Cryptology design, techniques and protocoles",1,340
+500,Cloud,1,492
+501,Communication,1,492
+502,Cultural Heritage,1,492
+503,Design,1,492
+504,Economic / Financial,1,492
+505,"Entertainment, Games",1,492
+506,"Green Computing, Energy, Environment & Sustainability",1,492
+507,"Healthcare, Medicine & Wellness",1,492
+508,Humanities & Computational Social Science,1,492
+509,"Internet of Things, Sensor Networks, Smart Cities",1,492
+510,Microscopy,1,492
+511,Misinformation and Fake News,1,492
+512,"Mobility, Driving & Flight",1,492
+513,Natural Sciences,1,492
+514,Robotics,1,492
+515,"Semantics Web, Information Retrieval",1,492
+516,Transportation,1,492
+517,Web,1,492
+518,Other Applications,1,492
+353,"Formal methods, and theory of security and privacy",1,340
+358,Security services,1,340
+364,Intrusion/anomaly detection and malware mitigation,1,340
+368,Security in hardware,1,340
+374,Systems security,1,340
+385,Network security,1,340
+393,Database and storage security and privacy,1,340
+399,Software and application security,1,340
+406,"Human, societal and ethical aspects of security and privacy",1,340
+416,Forensics,1,340
+421,"Audio, Speech and Language Processing",1,420
+425,Biomedical Signal and Image Processing,1,420
+431,Computer Graphics,1,420
+437,Computer Vision,1,420
+444,Geoscience and Remote Sensing for Earth observation,1,420
+449,Image and Video Processing,1,420
+456,Multimedia,1,420
+461,Pattern Recognition,1,420
+466,Signal Processing for Communications and Networks,1,420
+471,Signal Processing Theory & Methods,1,420
+481,Software organization and properties,1,480
+482,Software notations and tools,1,480
+483,Software creation and management,1,480
+161,Structure and multimedia based IR,2,147
+166,Environment specific IR,2,147
+171,Users and Interactive search,2,147
+172,Evaluation,2,147
+173,"Ethics in IR : Privacy preserving, Fairness and Explainability",2,147
+175,Theoretical Foundations of Data Mining,2,174
+176,Core Tasks,2,174
+183,Automated data science,2,174
+184,Data-specific,2,174
+195,"Parallel, Distributed and Cloud-based High Performance Mining",2,174
+196,"Ethics in Data mining: Explainability, Fairness, Privacy Preserving",2,174
+197,Data mining Architecture,2,174
+199,Web search,2,198
+200,Web services,2,198
+201,"Web and society, Web and citizens",2,198
+204,Social Web,2,198
+205,Economics and Online Markets,2,198
+208,Regression,2,207
+209,Classification,2,207
+210,Kernel methods,2,207
+211,Ensemble methods,2,207
+213,Clustering,2,212
+214,Dimensionality reduction and manifold learning,2,212
+215,Matrix and tensor factorization,2,212
+216,Topic models,2,212
+218,Algorithms,2,217
+219,Architectures,2,217
+220,Generative models,2,217
+221,Attention models,2,217
+225,Semi-supervised learning,2,224
+226,Online learning,2,224
+227,Multi-task learning,2,224
+228,Multi-agent learning,2,224
+229,Automatic learning,2,224
+230,Bio-inspired approaches,2,224
+232,Approximation theory,2,231
+233,Game theory,2,231
+234,Statistical learning,2,231
+235,Information theory,2,231
+237,"Fairness, accountability and transparency",2,236
+238,Privacy and security,2,236
+239,Causality,2,236
+240,Robustness,2,236
+243,Statistical estimation,2,242
+244,Information theory,2,242
+245,Bayesian inference,2,242
+246,Monte-Carlo methods,2,242
+247,Variational inference,2,242
+248,Stochastic processes,2,242
+249,Nonparametric statistics,2,242
+250,Graphical models,2,242
+251,Time series and sequences,2,242
+254,Convex optimization,2,253
+255,Non-convex optimization,2,253
+256,Non-smooth optimization,2,253
+257,Discrete and combinatorial Optimization,2,253
+258,Large-scale optimization,2,253
+259,Optimal transport,2,253
+260,Genetic algorithms,2,253
+265,Combinatorics,2,264
+266,Graph theory,2,264
+268,Solvers,2,267
+269,Statistical software,2,267
+270,Mathematical software performance,2,267
+273,Computer architectures,2,272
+279,Methods,2,272
+284,Dedicated architectures,2,272
+289,Distributed infrastructures,2,288
+298,Critical systems,2,288
+304,Distributed algorithms and methods,2,288
+310,Parallel systems,2,288
+315,Network design,2,314
+319,Network management,2,314
+322,Network performance,2,314
+326,Network types,2,314
+334,Network services,2,314
+342,Key management,2,341
+343,Public key,2,341
+344,Symmetric cryptography and hash functions,2,341
+345,Cryptanalysis and other attacks,2,341
+346,Information-theoretic techniques,2,341
+347,Mathematical foundations of cryptography,2,341
+348,Cryptography for identity management,2,341
+519,Contextual software domains,2,481
+520,Requirements Engineering (RE),2,481
+521,Software system structures,2,481
+522,General programming languages,2,482
+523,Formal language definitions,2,482
+524,Compilers,2,482
+525,Domain-specific languages,2,482
+526,Modeling and Model-Driven Engineering (MDE),2,482
+527,Designing software,2,483
+528,Software development process management and techniques,2,483
+529,Software verification and validation,2,483
+530,Collaboration in software development,2,483
+531,Search-based software engineering,2,483
+532,Mining Software Repositories,2,483
+533,Empirical SE,2,483
+534,Human factors in SE,2,483
+535,Computability,2,485
+536,Probabilistic computation,2,485
+537,Quantum computation theory,2,485
+538,Concurrency,2,485
+539,Abstract machines,2,485
+540,Formalisms,2,486
+541,Grammars and context-free languages,2,486
+542,Automata extensions,2,486
+543,Complexity classes,2,487
+544,"Problems, reductions, and completeness",2,487
+545,Oracles and decision trees,2,487
+546,"Proof complexity, and Interactive proof systems",2,487
+547,Complexity theory and logic,2,487
+548,Cryptographic primitives and protocols,2,487
+549,Logic and verification,2,488
+550,Proof theory,2,488
+551,Automated reasoning,2,488
+552,Constraint and logic programming,2,488
+553,Finite Model Theory,2,488
+554,Type theory,2,488
+555,Graph algorithms analysis,2,489
+556,Approximation algorithms analysis,2,489
+557,Mathematical optimization,2,489
+558,Data structures design and analysis,2,489
+559,Parallel/Distributes/Concurrent algorithms,2,489
+560,Machine learning theory,2,490
+561,Algorithmic game theory and mechanism design,2,490
+562,Database theory,2,490
+563,Theory of randomized search heuristics,2,490
+564,"Missions, instruments, sensors",2,444
+349,Secure multiparty computation,2,341
+350,Post quantum cryptography,2,341
+351,Quantum cryptography,2,341
+352,Steganography,2,341
+354,Trust frameworks,2,353
+355,Security and privacy requirements,2,353
+356,Formal security models including security policies,2,353
+357,Logic and verification,2,353
+359,Authentication,2,358
+360,Access control,2,358
+361,"Pseudonymity, anonymity and untraceability",2,358
+362,Privacy-preserving protocols,2,358
+363,Usage control,2,358
+365,Malware and its mitigation,2,364
+366,Intrusion detection systems and response,2,364
+367,Social engineering attacks,2,364
+369,Tamper-proof and tamper-resistant designs,2,368
+370,Embedded systems security,2,368
+371,Hardware security implementation,2,368
+372,Hardware attacks and counter-measures,2,368
+373,Hardware reverse engineering,2,368
+375,Operating systems security,2,374
+376,Mobile platform security,2,374
+377,Browser security,2,374
+378,Distributed systems security including Cloud computing,2,374
+379,Information flow control,2,374
+380,Denial-of-service attacks,2,374
+381,Firewalls,2,374
+382,Vulnerability management,2,374
+383,File system security,2,374
+384,Large scale security playtform,2,374
+386,Security protocols,2,385
+387,Web protocol security,2,385
+388,Mobile and wireless security inc. IoT,2,385
+389,Firewalls,2,385
+390,Network access control,2,385
+391,Network monitoring,2,385
+392,Network attacks,2,385
+394,Data anonymization and sanitization,2,393
+395,Management and querying of encrypted data,2,393
+396,Information accountability and usage control,2,393
+397,Database activity monitoring,2,393
+398,Inference control and monitoring,2,393
+400,Software security engineering,2,399
+401,Web application security,2,399
+402,Social network security and privacy,2,399
+403,Electronic voting,2,399
+404,Domain-specific security and privacy architectures,2,399
+405,Obfuscation and software reverse engineering,2,399
+407,Economics of security and privacy,2,406
+408,Social and organizational aspects of security and privacy,2,406
+409,Compliance-by-design,2,406
+410,Usability in security and privacy,2,406
+411,Ethics of research and usages,2,406
+412,Crisis analysis and resilience,2,406
+413,Risk analysis and trust evaluation,2,406
+414,European policies and socio-technological aspects of the digital world,2,406
+415,Foresight of socio-technological digital systems,2,406
+417,Anti-forensics,2,416
+418,Trace analysis,2,416
+419,Proof techniques,2,416
+422,Audio and acoustic signal processing,2,421
+423,Human language technology,2,421
+424,Speech processing,2,421
+426,Brain/human-computer interfaces,2,425
+427,Bioinformatics,2,425
+428,Neural signals,2,425
+429,Physiological signal processing,2,425
+430,Biological & medical imaging,2,425
+432,"Geometric Modeling, Computer Aided Design",2,431
+433,Geometry Analysis and Processing,2,431
+434,"Animation, Fluid and Matter Simulation",2,431
+435,"Rendering, Light Transport Simulation",2,431
+436,"Computational Photography, Colors",2,431
+438,"3D Reconstruction",2,437
+439,Shape from X,2,437
+440,Scene Analysis and Understanding,2,437
+441,"Robot Vision, Autonomous Vehicles, SLAM",2,437
+442,Motion and Tracking,2,437
+443,"Human : Biometric, Face and Gesture, Expression, Pose",2,437
+445,Modeling,2,444
+446,Data analysis and processing,2,444
+447,Data management and collections,2,444
+448,High performance computing,2,444
+450,Electronic Imaging,2,449
+451,Computational Photography,2,449
+452,"Image and video Sensing, Modeling, and Representation",2,449
+453,"Image and Video Coding, Compression",2,449
+454,Image and Video Processing Techniques,2,449
+455,"Image and Video Analysis, Synthesis, and Retrieval",2,449
+457,"Engaging Users with Multimedia, Emotion",2,456
+458,"Quality of Experience, Interaction",2,456
+459,Multimedia Systems,2,456
+460,Understanding Multimedia Content,2,456
+462,Action and Behavior Recognition,2,461
+463,"Segmentation, Detection, Matching/Grouping",2,461
+464,Big Data and Large Scale methods,2,461
+465,Deep Learning,2,461
+467,"Modulation, estimation, demodulation, encoding and decoding",2,466
+468,"Multi-carrier, spread spectrum techniques and MIMO systems",2,466
+469,"Multi-user communications, networks and network resource allocation",2,466
+470,"Information, coding and communications theory",2,466
+472,Statistical signal processing,2,471
+473,"Sampling, multirate processing, and multiresolution methods",2,471
+474,Sensor array and multichannel processing,2,471
+475,Optimization methods for signal processing,2,471
+476,"Restoration, enhancement and source separation",2,471
+477,Signal and information processing over graphs,2,471
+478,Design and implementation of signal processing systems,2,471
+3,"Knowledge representation languages, Knowledge compilation, Tractable languages",2,2
+4,Computational complexity of reasoning,2,2
+5,"Nonmonotonic logics, Default logics, Conditional logics",2,2
+6,"Inconsistency-tolerant reasoning, Non-classical logics",2,2
+7,Argumentation,2,2
+8,"Causal reasoning, Diagnosis",2,2
+9,"Qualitative, Geometric, Spatial, Temporal reasoning",2,2
+10,Belief change,2,2
+11,"Action languages, Reasoning about actions and change",2,2
+12,"Common-sense reasoning, Case-based reasoning, Analogical reasoning",2,2
+13,"Automated reasoning, Theorem Proving",2,2
+14,Ontologies and Semantics web,2,2
+15,"Ontology theories and Description logics, Knowledge and concept structures for the semantic web",2,2
+16,Uncertainty representations,2,2
+17,Reasoning under uncertainty,2,2
+18,Logic programming and answer set programming,2,2
+19,"Learning and reasoning, Knowledge acquisition",2,2
+20,"Preference modeling, Reasoning about preferences",2,2
+21,Knowledge engineering,2,2
+23,Multi-agent systems,2,22
+24,Intelligent agents,2,22
+25,Cooperation and coordination,2,22
+26,Economic Paradigms,2,22
+28,"Linguistic Theories, Cognitive Modeling and Psycho-linguistics",2,27
+29,Information Extraction,2,27
+30,"Information Retrieval, Text Mining",2,27
+31,Machine Translation and Multilinguality,2,27
+32,Text classification,2,27
+33,Summarization,2,27
+34,Natural language generation,2,27
+35,Discourse and pragmatics,2,27
+36,Dialog and Interactive Systems,2,27
+37,Interpretability and Analysis of Models for NLP,2,27
+38,Resources and Evaluation,2,27
+39,"Semantics: Lexical Semantics, Sentence-level Semantics, Textual Inference, and Other areas",2,27
+40,"Syntax: Tagging, Chunking, and Parsing",2,27
+41,"Sentiment analysis, Stylistic analysis, Argument mining",2,27
+42,Question answering,2,27
+43,Computational Social Science and Cultural Analytics,2,27
+44,Speech and multimodality,2,27
+45,"Phonology, Morphology, Word segmentation",2,27
+46,"Language Grounding to Vision, Robotics and Beyond",2,27
+47,Ontology induction from text,2,27
+48,Ethics in NLP,2,27
+54,Formal models of decision,2,53
+55,"Combinatorial decision, Group decision",2,53
+56,Software development for decision support,2,53
+57,Risk Management and decision support,2,53
+58,Recommendation systems,2,53
+59,Theoretical foundations of planning,2,53
+60,Planning for deterministic actions,2,53
+61,Planning under uncertainty,2,53
+62,Multi-Agent planning,2,53
+63,Robotic planning,2,53
+64,Epistemic planning,2,53
+65,Learning in planning and scheduling,2,53
+66,"Markov decision processes, POMDPs",2,53
+67,Real-time planning,2,53
+68,Routing,2,53
+69,Scheduling,2,53
+70,Search in planning and scheduling,2,53
+72,Constraint optimization,2,71
+73,Constraint programming,2,71
+74,Constraint satisfaction,2,71
+75,Constraint learning and acquisition,2,71
+76,Distributed Constraint Satisfaction/Optimization,2,71
+77,Mixed Discrete/Continuous optimization,2,71
+78,Satisfiability,2,71
+79,Search,2,71
+80,Solvers and Tools,2,71
+82,Genetic Algorithms,2,81
+83,Genetic Programming,2,81
+84,Differential evolution,2,81
+85,Interactive evolution,2,81
+86,Gene regulatory networks,2,81
+87,Artificial Life,2,81
+88,Learning classifier systems,2,81
+89,Neuroevolution,2,81
+92,Adaptive behavior,2,91
+93,Affective computing,2,91
+94,Analogical and conceptual reasoning,2,91
+95,Brain modeling,2,91
+96,Computational creativity,2,91
+97,Introspection and meta-cognition,2,91
+98,Memory storage and retrieval,2,91
+99,Simulating humans,2,91
+100,Social cognition and interaction,2,91
+101,Structural learning and knowledge capture,2,91
+103,"3D interaction",2,102
+104,Modalities,2,102
+105,Perception,2,102
+106,"Virtual Human, avatar, perceptive visual appeal",2,102
+107,"Systems, Hardware, Sensors",2,102
+109,"Interaction Techniques, Devices",2,108
+110,Interactive Systems and Tools,2,108
+111,Interaction Design Process and Methods,2,108
+112,Collaborative computing,2,108
+113,Ubiquitous and mobile computing,2,108
+114,Interactive data visualization,2,108
+115,Accessibility,2,108
+117,Techniques and systems for data analysis and visualization,2,116
+118,Data transformation,2,116
+119,Visualization application,2,116
+120,"Foundations, concepts and theory",2,116
+121,Data science & visualization,2,116
+123,Artificial Intelligence & Education,2,122
+124,CHI for Education,2,122
+125,Data science applications in education,2,122
+126,Software engineering for Education,2,122
+127,Technology-enhanced Pedagogies,2,122
+128,Techonologically-Supported Learning contexts,2,122
+129,Serious Games,2,122
+130,Applications in learning communities,2,122
+133,"Database Design, Data Models and Query Languages",2,132
+134,Data management system Engines,2,132
+135,Data management performance and Security,2,132
+136,Parallel and distributed DBMS / Cloud Data Management,2,132
+137,"Data Integration, Metadata Management and Data Quality",2,132
+138,Data Management Issues and Support for ML and AI,2,132
+139,Novel DB Architectures,2,132
+140,Data-Specific Management,2,132
+145,Decision support systems,2,132
+146,User Interfaces,2,132
+148,Search and ranking,2,147
+149,Theoretical models and foundations of information retrieval,2,147
+150,Search engine architectures and Scalability,2,147
+151,Retrieval Tasks,2,147
+318,Network algorithms,3,315
+320,Network management,3,319
+321,Network virtualization,3,319
+323,Network modelling and analysis,3,322
+324,Network simulation,3,322
+325,Network testbed/platform,3,322
+327,Embedded networks,3,326
+328,Real-time networks,3,326
+329,Wireless,3,326
+330,IoT,3,326
+331,Mobile,3,326
+332,Satellite,3,326
+333,Vehicular,3,326
+335,Location based services,3,334
+336,Programmable networks,3,334
+337,Virtualized networks,3,334
+338,In-network processing,3,334
+339,Cloud and edge computing,3,334
+141,"Graphs,constraints and Semi Structured Data",3,140
+142,Text/ Multimedia Databases,3,140
+143,Spatial and Temporal Databases,3,140
+144,"Fuzzy, Probabilistic and Approximate Data",3,140
+152,Question answering,3,151
+153,"Conversational systems, intelligent personal assistants and agents",3,151
+154,Opinion retrieval,3,151
+155,Filtering / Recommendation,3,151
+156,Summarization,3,151
+157,Classification/clustering,3,151
+158,Content analysis,3,151
+159,Quantitative analysis of science,3,151
+160,"Entity search, named-entities, relation and event extraction",3,151
+162,"Structured Text, Mathematics, genomics, chemical...",3,161
+163,Multilingual/cross lingual,3,161
+164,image search/ video search,3,161
+165,"Speech, audio search, music search",3,161
+167,Local and mobile search,3,166
+168,Social media /Web search,3,166
+169,Desktop search,3,166
+170,Enterprise search,3,166
+177,Anomaly / Outlier Detection,3,176
+178,Exploratory Data Mining,3,176
+179,Frequent Pattern Mining,3,176
+180,Clustering / Classification,3,176
+181,Interactive & Data Visualisation,3,176
+182,Recommender Systems / Collaborative Filtering,3,176
+185,Mining Text,3,184
+186,Mining Social Media Networks,3,184
+187,Mining Data Streams,3,184
+188,"Mining Graphs,	Time-evolving networks",3,184
+189,Mining Heterogeneous Data / Multimedia,3,184
+190,Mining Semi Structured Data,3,184
+191,Mining Spatial and/or Temporal Data,3,184
+192,Mining Codebase and Software Repository,3,184
+193,Knowledge Graphs and Knowledge Base Completion,3,184
+194,Others,3,184
+202,"Governance, politics, democracy, engagement",3,201
+203,Applications based on the Web,3,201
+274,Computers,3,273
+275,Processors,3,273
+276,Multiprocessors,3,273
+277,GPU,3,273
+278,Memory,3,273
+280,Architecture design,3,279
+281,Architecture verification,3,279
+282,Architecture test,3,279
+283,Architecture Simulation,3,279
+285,System on chips,3,284
+286,Embedded systems,3,284
+287,Sensors,3,284
+290,Operating systems,3,289
+291,Middleware,3,289
+292,"Cloud, edge and fog computing",3,289
+293,Cluster,3,289
+294,Grids,3,289
+295,Large-scale systems,3,289
+296,Peer-to-peer systems,3,289
+297,"Performance, QoS, energy",3,289
+299,Embedded systems,3,298
+300,IoT,3,298
+301,Real-time systems,3,298
+302,Dependable systems,3,298
+303,Verification methods,3,298
+305,Distributed algorithms,3,304
+306,Self-organization,3,304
+307,Concurrency,3,304
+308,Simulation,3,304
+309,Languages,3,304
+311,Parallel computing,3,310
+312,Parallel programming,3,310
+313,High performance computing,3,310
+316,Network architectures,3,315
+317,Network protocols,3,315
