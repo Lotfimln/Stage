@@ -245,3 +245,55 @@ tbody tr:nth-child(odd) { background: rgba(255,255,255,.02); }
 }
 .picker-item { padding:8px 10px; cursor:pointer; }
 .picker-item:hover { background:#0f1a30; }
+
+/* --- Modal "Ajouter un positionnement" --- */
+#dlgAddPos {
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 18px 20px;
+  width: min(980px, calc(100vw - 48px));
+  color: #e5e7eb;
+  background: #0b1220;            /* fond sombre net */
+  box-shadow: 0 24px 60px rgba(0,0,0,.55);
+}
+
+#dlgAddPos::backdrop {
+  background: rgba(0,0,0,.55);     /* voile */
+}
+
+/* rangées / titre éventuel */
+#dlgAddPos .row { display: flex; gap: 12px; align-items: center; }
+#dlgAddPos .row > * { flex: 1 1 auto; }
+
+/* boutons du footer */
+#dlgAddPos .actions {
+  display:flex; gap:10px; justify-content:flex-end; margin-top:14px;
+}
+
+#dlgAddPos button {
+  border: 1px solid #1f2937;
+  background: #111827;
+  color: #e5e7eb;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#dlgAddPos button:hover { background:#0f172a; }
+#dlgAddPos .primary { background:#2563eb; border-color:#2563eb; color:#fff; }
+#dlgAddPos .primary:hover { filter: brightness(1.05); }
+
+/* s'assurer que les listes de pickers passent au-dessus du modal */
+.picker-portal {
+  z-index: 2147483647 !important; /* plus haut que tout */
+}
+
+/* Chrome / Edge / Safari */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+dialog.dlg {
+  overflow: visible;
+}

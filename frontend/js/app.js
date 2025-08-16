@@ -257,79 +257,87 @@
       };
     }
   }
+function renderPeople(rows) {
+  const tbody = $('peopleTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
 
-  function renderPeople(rows) {
-    const tbody = $('peopleTbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+  (rows || []).forEach(r => {
+    const tr = document.createElement('tr');
 
-    rows.forEach(r => {
-      const tr = document.createElement('tr');
+    // champs avec tolérance de casse
+    const nom   = pick(r, 'nom', 'NOM') || '';
+    const pren  = pick(r, 'prenom', 'PRENOM') || '';
+    const theme = pick(r, 'theme', 'THEME') || '';
+    const role  = pick(r, 'libcontribution', 'LIBCONTRIBUTION', 'role', 'ROLE') || '';
+    const temp  = pick(r, 'libelletemporalite', 'LIBELLETEMPORALITE', 'temp', 'TEMP') || '';
+    const idStr = pick(r, 'idstructure', 'IDSTRUCTURE');
 
-      // autorisé si manuel: auto_genere NULL ou != '0'
-      const isManual = (r.auto_genere == null || String(r.auto_genere) !== '0');
+    const auto = pick(r, 'auto_genere', 'AUTO_GENERE');
+    const isManual = (auto == null || String(auto) !== '0'); // MANU si auto_genere null ou != '0'
 
-      tr.innerHTML = `
-        <td>${escapeHtml(r.nom || '')}</td>
-        <td>${escapeHtml(r.prenom || '')}</td>
-        <td>${escapeHtml(r.theme || '')}</td>
-        <td>${escapeHtml(r.libcontribution || r.role || '')}</td>
-        <td>${escapeHtml(r.libelletemporalite || r.temp || '')}</td>
-        <td>${r.idstructure ?? ''}</td>
-        <td style="text-align:right; white-space:nowrap;"></td>
-      `;
+    tr.innerHTML = `
+      <td>${escapeHtml(nom)}</td>
+      <td>${escapeHtml(pren)}</td>
+      <td>${escapeHtml(theme)}</td>
+      <td>${escapeHtml(role)}</td>
+      <td>${escapeHtml(temp)}</td>
+      <td>${idStr ?? ''}</td>
+      <td style="text-align:right; white-space:nowrap;"></td>
+    `;
 
-      const actions = tr.lastElementChild;
+    const actions = tr.lastElementChild;
 
-      // bouton "Ajouter" (pré-remplit avec cette personne)
-      const btnAdd = document.createElement('button');
-      btnAdd.textContent = 'Ajouter';
-      btnAdd.title = 'Ajouter un positionnement pour cette personne';
-      btnAdd.onclick = () => openAddPos({
-        idpers: r.idpers || r.IDPERS,
-        nom: r.nom, prenom: r.prenom,
-        idtheme: selectedThemeId, theme: selectedThemeLabel
-      });
-      actions.appendChild(btnAdd);
-
-      // bouton "Supprimer" si MANU
-      const btnDel = document.createElement('button');
-      btnDel.textContent = 'Supprimer';
-      btnDel.style.marginLeft = '6px';
-      btnDel.disabled = !isManual;
-      btnDel.title = isManual ? 'Supprimer ce positionnement' : 'Positionnement auto – suppression désactivée';
-      btnDel.onclick = async () => {
-        if (!confirm('Supprimer ce positionnement ?')) return;
-        try {
-          const payload = {
-            idpers: r.idpers,
-            idtheme: r.idtheme,
-            libcontr: r.libcontribution || r.role,
-            libtemp: r.libelletemporalite || r.temp
-          };
-          await api('/api/positions', {
-            method: 'DELETE',
-            body: JSON.stringify(payload)
-          });
-          if (lastSearchBody) {
-            const refreshed = await api('/api/people/search', {
-              method: 'POST',
-              body: JSON.stringify(lastSearchBody)
-            });
-            renderPeople(refreshed);
-          } else {
-            tr.remove();
-          }
-          setStatus('✅ Positionnement supprimé', 'ok');
-        } catch (e) {
-          setStatus('❌ ' + e.message, 'err');
-        }
-      };
-      actions.appendChild(btnDel);
-
-      tbody.appendChild(tr);
+    // bouton "Ajouter" (ouvre le dialog prérempli)
+    const btnAdd = document.createElement('button');
+    btnAdd.textContent = 'Ajouter';
+    btnAdd.title = 'Ajouter un positionnement pour cette personne';
+    btnAdd.onclick = () => openAddPos({
+      idpers: pick(r, 'idpers', 'IDPERS'),
+      nom:    pick(r, 'nom', 'NOM'),
+      prenom: pick(r, 'prenom', 'PRENOM'),
+      idtheme: pick(r, 'idtheme', 'IDTHEME') || selectedThemeId,
+      theme:   theme || selectedThemeLabel
     });
-  }
+    actions.appendChild(btnAdd);
+
+    // bouton "Supprimer" (uniquement si MANU)
+    const btnDel = document.createElement('button');
+    btnDel.textContent = 'Supprimer';
+    btnDel.style.marginLeft = '6px';
+    btnDel.disabled = !isManual;
+    btnDel.title = isManual ? 'Supprimer ce positionnement' : 'Positionnement auto – suppression désactivée';
+    btnDel.onclick = async () => {
+      if (!confirm('Supprimer ce positionnement ?')) return;
+      try {
+        const payload = {
+          idpers: pick(r, 'idpers', 'IDPERS'),
+          idtheme: pick(r, 'idtheme', 'IDTHEME'),
+          libcontr: pick(r, 'libcontribution', 'LIBCONTRIBUTION', 'role', 'ROLE'),
+          libtemp:  pick(r, 'libelletemporalite', 'LIBELLETEMPORALITE', 'temp', 'TEMP')
+        };
+        await api('/api/positions', { method: 'DELETE', body: JSON.stringify(payload) });
+
+        if (lastSearchBody) {
+          const refreshed = await api('/api/people/search', {
+            method: 'POST',
+            body: JSON.stringify(lastSearchBody)
+          });
+          renderPeople(refreshed);
+        } else {
+          tr.remove();
+        }
+        setStatus('✅ Positionnement supprimé', 'ok');
+      } catch (e) {
+        setStatus('❌ ' + (e?.message || e), 'err');
+      }
+    };
+    actions.appendChild(btnDel);
+
+    tbody.appendChild(tr);
+  });
+}
+
 
   function clearPeople() {
     const tbody = $('peopleTbody');
@@ -363,176 +371,195 @@ function bindAddPositionUI() {
     });
   }
 
-  // --- Autocomplétion PERSONNES (datalist) — protégé contre le double-binding
-  const inpPerson = $('ap_person');
-  const dlPersons = $('dlPersons');
-  if (inpPerson && dlPersons && !inpPerson.dataset.autoBound) {
-    inpPerson.dataset.autoBound = '1';
+  // ========== Pickers (personne / thème / structure) ==========
+  // PERSONNE (single)
+    const ipp = $('ap_person');
+    if (ipp) ipp.removeAttribute('list');
+    if (ipp && !ipp._pickerInstalled) {
+      attachPicker(ipp, {
+        mode: 'single',
+        fetcher: fetchPeopleLike, // /api/people/find?q=
+        minChars: 0,              // ouvre la liste même si on ne tape rien
+        onPick: it => { $('ap_idpers').value = it.id; }
+      });
+    }
 
-    inpPerson.addEventListener('input', debounce(async (e) => {
-      const q = e.target.value.trim();
-      if (q.length < 2) return;
-      try {
-        const list = await safeFind('/api/people/find?q=' + encodeURIComponent(q));
-        dlPersons.innerHTML = '';
-        (list || []).forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = `${p.nom ?? ''} ${p.prenom ?? ''} (#${p.idpers})`.trim();
-          dlPersons.appendChild(opt);
-        });
-      } catch { /* silence */ }
-    }, 200));
+    const ipt = $('ap_theme');
+    if (ipt) ipt.removeAttribute('list');
+    if (ipt && !ipt._pickerInstalled) {
+      attachPicker(ipt, {
+        mode: 'single',
+        fetcher: fetchThemesLike, // /api/themes/find?q=
+        toItem: r => ({ id: Number(r.id ?? r.ID), label: String(r.label ?? r.LABEL) }),
+        minChars: 0,
+        onPick: it => {
+          $('ap_idtheme').value  = it.id;
+          $('ap_libtheme').value = it.label;
+        }
+      });
+    }
 
-    // Quand on choisit une ligne, remplir l’ID caché + le label affiché
-    inpPerson.addEventListener('change', () => {
-      const id = extractIdFromTagged(inpPerson.value);
-      if ($('ap_idpers')) $('ap_idpers').value = id || '';
-      if ($('ap_person_label')) $('ap_person_label').textContent = inpPerson.value || '';
-    });
-  }
+    const ips = $('ap_libstruct'); // libellé structure (champ texte)
+    if (ips && !ips._pickerInstalled) {
+      attachPicker(ips, {
+        mode: 'single',
+        fetcher: fetchStructsLike, // /api/structures/find?q=
+        toItem: r => ({ id: Number(r.id ?? r.ID), label: String(r.label ?? r.LABEL ?? r.id) }),
+        minChars: 0,
+        onPick: it => {
+          $('ap_idstruct').value = it.id;
+          $('ap_libstruct').value = it.label;
+        }
+      });
+    }
+    
 
-  // --- Autocomplétion THEMES (datalist) — protégé contre le double-binding
-  const inpTheme  = $('ap_theme');
-  const dlThemes  = $('dlThemes');
-  if (inpTheme && dlThemes && !inpTheme.dataset.autoBound) {
-    inpTheme.dataset.autoBound = '1';
 
-    inpTheme.addEventListener('input', debounce(async (e) => {
-      const q = e.target.value.trim();
-      if (q.length < 2) return;
-      try {
-        const list = await safeFind('/api/themes/find?q=' + encodeURIComponent(q));
-        // attendu: [{id, label}]
-        dlThemes.innerHTML = '';
-        (list || []).forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = `${t.label} (#${t.id})`;
-          dlThemes.appendChild(opt);
-        });
-      } catch { /* silence */ }
-    }, 200));
-
-    inpTheme.addEventListener('change', () => {
-      const id = extractIdFromTagged(inpTheme.value);
-      if ($('ap_idtheme'))   $('ap_idtheme').value   = id || '';
-      if ($('ap_libtheme'))  $('ap_libtheme').value  = lookupThemeLabelById(id) || '';
-    });
-  }
 }
 
-    function bindAddPosForm() {
-        const form = $('formAddPos');
-        const dlg  = $('dlgAddPos');
-        const save = $('btnSavePos');
-        if (!form || !dlg || !save) return;
 
-        save.addEventListener('click', async (e) => {
-        e.preventDefault();
-        try {
-            // récupérer idpers
-            let idpers = parseInt($('ap_idpers').value, 10);
-            if (!idpers) {
-            idpers = extractIdFromTagged($('ap_person').value) || null;
-            }
-            // récupérer idtheme
-            let idtheme = parseInt($('ap_idtheme').value, 10);
-            if (!idtheme) {
-            idtheme = extractIdFromTagged($('ap_theme').value) || null;
-            }
+function bindAddPosForm() {
+    const form = $('formAddPos');
+    const dlg  = $('dlgAddPos');
+    const save = $('btnSavePos');
+    if (!form || !dlg || !save) return;
 
-            const body = {
-            idpers: idpers,
-            idtheme: idtheme,
-            libcontr: $('ap_libcontr').value,
-            libtemp: $('ap_libtemp').value,
-            idstruct: valOrNull('ap_idstruct'),
-            libstruct: valOrNull('ap_libstruct'),
-            idtypestruct: valOrNull('ap_idtypestruct'),
-            libtypestruct: valOrNull('ap_libtypestruct')
-            };
-
-            if (!body.idpers || !body.idtheme) {
-            setApStatus('ID personne et ID thème sont requis', 'err');
-            return;
-            }
-
-            await api('/api/positions', { method: 'POST', body: JSON.stringify(body) });
-
-            setApStatus('✅ Positionnement enregistré', 'ok');
-
-            // rafraîchir la dernière recherche si dispo
-            if (lastSearchBody) {
-            const refreshed = await api('/api/people/search', {
-                method: 'POST',
-                body: JSON.stringify(lastSearchBody)
-            });
-            renderPeople(refreshed);
-            }
-
-            setTimeout(() => dlg.close(), 400);
-        } catch (err) {
-            setApStatus('❌ ' + (err?.message || err), 'err');
+    save.addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+        // récupérer idpers
+        let idpers = parseInt($('ap_idpers').value, 10);
+        if (!idpers) {
+        idpers = extractIdFromTagged($('ap_person').value) || null;
         }
-        });
-
-        function valOrNull(id) {
-        const v = $(id).value;
-        return v === '' ? null : isNaN(v) ? v : Number(v);
+        // récupérer idtheme
+        let idtheme = parseInt($('ap_idtheme').value, 10);
+        if (!idtheme) {
+        idtheme = extractIdFromTagged($('ap_theme').value) || null;
         }
-        function setApStatus(msg, cls) {
-        const el = $('ap_status');
-        el.textContent = msg;
-        el.className = 'small ' + (cls === 'ok' ? 'ok' : cls === 'err' ? 'err' : 'muted');
-        }
-    }
 
-    // ---------- Helpers ----------
-    function setStatus(text, cls) {
-        const el = $('status');
-        if (!el) return;
-        el.textContent = text;
-        el.className = (cls === 'ok') ? 'ok' : (cls === 'err') ? 'err' : 'muted';
-    }
-
-    function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-        }[c]));
-    }
-
-    function extractIdFromTagged(s) {
-        if (!s) return null;
-        const m = String(s).match(/\(#(\d+)\)/);
-        return m ? parseInt(m[1], 10) : null;
-    }
-
-    function lookupThemeLabelById(id) {
-        if (!id || !Array.isArray(state.flat) || !state.flat.length) return '';
-        const row = state.flat.find(r => Number(r.id) === Number(id));
-        return row ? row.label : '';
-    }
-
-    // tente un GET et renvoie [] si 404 / endpoint absent
-    async function safeFind(url) {
-        try {
-        const res = await fetch(new URL(url, state.baseUrl).toString(), {
-            headers: state.token ? { 'Authorization': 'Bearer ' + state.token } : {}
-        });
-        if (!res.ok) return [];
-        const ct = res.headers.get('content-type') || '';
-        return ct.includes('application/json') ? (await res.json()) : [];
-        } catch (e){
-        return [];
-        }
-    }
-
-    function debounce(fn, ms) {
-        let t = null;
-        return (...args) => {
-        clearTimeout(t);
-        t = setTimeout(() => fn(...args), ms);
+        const body = {
+        idpers: idpers,
+        idtheme: idtheme,
+        libcontr: $('ap_libcontr').value,
+        libtemp: $('ap_libtemp').value,
+        idstruct: valOrNull('ap_idstruct'),
+        libstruct: valOrNull('ap_libstruct'),
+        idtypestruct: valOrNull('ap_idtypestruct'),
+        libtypestruct: valOrNull('ap_libtypestruct')
         };
+
+        if (!body.idpers || !body.idtheme) {
+        setApStatus('ID personne et ID thème sont requis', 'err');
+        return;
+        }
+
+        await api('/api/positions', { method: 'POST', body: JSON.stringify(body) });
+
+        setApStatus('✅ Positionnement enregistré', 'ok');
+
+        // rafraîchir la dernière recherche si dispo
+        if (lastSearchBody) {
+        const refreshed = await api('/api/people/search', {
+            method: 'POST',
+            body: JSON.stringify(lastSearchBody)
+        });
+        renderPeople(refreshed);
+        }
+
+        setTimeout(() => dlg.close(), 400);
+    } catch (err) {
+        setApStatus('❌ ' + (err?.message || err), 'err');
     }
+    });
+
+    function valOrNull(id) {
+    const v = $(id).value;
+    return v === '' ? null : isNaN(v) ? v : Number(v);
+    }
+    function setApStatus(msg, cls) {
+    const el = $('ap_status');
+    el.textContent = msg;
+    el.className = 'small ' + (cls === 'ok' ? 'ok' : cls === 'err' ? 'err' : 'muted');
+    }
+}
+
+// Ouvre le dialogue "Ajouter un positionnement" avec des valeurs préremplies
+function openAddPos({ idpers = '', nom = '', prenom = '', idtheme = '', theme = '' } = {}) {
+  const dlg = $('dlgAddPos');
+  if (!dlg) return;
+
+  if ($('ap_idpers'))  $('ap_idpers').value = idpers || '';
+  if ($('ap_person'))  $('ap_person').value = [prenom, nom].filter(Boolean).join(' ');
+  if ($('ap_person_label')) $('ap_person_label').textContent = $('ap_person')?.value || '';
+
+  if ($('ap_idtheme'))   $('ap_idtheme').value = idtheme || '';
+  if ($('ap_theme'))     $('ap_theme').value = theme ? `${theme} (#${idtheme || ''})`.trim() : '';
+  if ($('ap_libtheme'))  $('ap_libtheme').value = theme || '';
+
+  // Valeurs par défaut "raisonnables"
+  if ($('ap_libcontr') && !$('ap_libcontr').value) $('ap_libcontr').value = 'Contributeur';
+  if ($('ap_libtemp')  && !$('ap_libtemp').value)  $('ap_libtemp').value  = 'Présent';
+
+  dlg.showModal?.();
+}
+
+
+// ---------- Helpers ----------
+function setStatus(text, cls) {
+    const el = $('status');
+    if (!el) return;
+    el.textContent = text;
+    el.className = (cls === 'ok') ? 'ok' : (cls === 'err') ? 'err' : 'muted';
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[c]));
+}
+// retourne la 1re valeur définie parmi une liste de noms de clés (gère la casse)
+function pick(r, ...names) {
+  for (const n of names) {
+    if (r && r[n] !== undefined && r[n] !== null) return r[n];
+  }
+  return undefined;
+}
+
+
+function extractIdFromTagged(s) {
+    if (!s) return null;
+    const m = String(s).match(/\(#(\d+)\)/);
+    return m ? parseInt(m[1], 10) : null;
+}
+
+function lookupThemeLabelById(id) {
+    if (!id || !Array.isArray(state.flat) || !state.flat.length) return '';
+    const row = state.flat.find(r => Number(r.id) === Number(id));
+    return row ? row.label : '';
+}
+
+// tente un GET et renvoie [] si 404 / endpoint absent
+async function safeFind(url) {
+    try {
+    const res = await fetch(new URL(url, state.baseUrl).toString(), {
+        headers: state.token ? { 'Authorization': 'Bearer ' + state.token } : {}
+    });
+    if (!res.ok) return [];
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? (await res.json()) : [];
+    } catch (e){
+    return [];
+    }
+}
+
+function debounce(fn, ms) {
+    let t = null;
+    return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+    };
+}
     // --- AUTOCOMPLETE -----------------------------------------------------------
 function setupAutocomplete() {
   // mémos des suggestions (clé = texte affiché dans le datalist)
@@ -732,7 +759,7 @@ async function bindCSRQueries() {
         input = document.createElement('input'); input.type = 'checkbox';
         if (f.default !== undefined) input.checked = !!f.default;
       } else if (f.type === 'number') {
-        input = document.createElement('input'); input.type = 'number';
+        input = document.createElement('input'); input.type = 'text';
         if (f.placeholder) input.placeholder = f.placeholder;
         if (f.default !== undefined) input.value = f.default;
       } else if (f.type === 'select') {
@@ -755,14 +782,13 @@ async function bindCSRQueries() {
 
       // PERSON (single)
       if (/(^|_)person(_id)?$/.test(k) || k === 'idpers') {
-        // force a text input so you can type names
         if (input.tagName === 'INPUT') input.type = 'text';
         attachPicker(input, {
           mode: 'single',
-          fetcher: fetchPeopleLike,                     // /api/people/find
-          toItem: r => ({ id: r.idpers, label: `${r.prenom || ''} ${r.nom || ''}`.trim() }),
-          minChars: 0                                   // open list on focus
+          fetcher: fetchPeopleLike, 
+          minChars: 0
         });
+
       } else if (k === 'structure_id') {
       // single structure
       if (input.tagName === 'INPUT') input.type = 'text';
@@ -966,7 +992,7 @@ async function fetchStructsLike(q) {
 
 // Ferme toutes les listes de pickers (sauf éventuellement une)
 function hideAllPickerLists(except = null) {
-  document.querySelectorAll('.picker-list').forEach(el => {
+  document.querySelectorAll('.picker-portal').forEach(el => {
     if (el !== except) el.style.display = 'none';
   });
 }
@@ -975,7 +1001,7 @@ function hideAllPickerLists(except = null) {
  * Petit picker générique (single|multi) avec suggestions.
  * Eléments attendus du fetcher: [{id, label}] (peut contenir {nom/prenom} -> label ajusté plus bas)
  */
-function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, minChars = 2, chipSingle = false }) {
+function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, minChars = 2, chipSingle = false, onPick = null }) {
   if (!input || input._pickerInstalled) return;
 
   const ensureMounted = (cb, tries = 20) => {
@@ -1006,7 +1032,7 @@ function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, mi
       wrap.insertBefore(chips, input);
     }
     let clearBtn = null;
-    if (mode === 'single'& !chipSingle) {
+    if (mode === 'single' && !chipSingle) {
       clearBtn = document.createElement('button');
       clearBtn.type = 'button';
       clearBtn.textContent = '×';
@@ -1059,14 +1085,24 @@ function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, mi
       borderRadius: '8px',
       padding: '4px 0',
       boxShadow: '0 8px 24px rgba(0,0,0,.35)'
+      
+      
     });
-    document.body.appendChild(list);
+    
+    const getPortalHost = () => {
+      const d = input.closest('dialog');
+      return (d && d.open) ? d : document.body;
+    };
+    const inDialog     = !!input.closest('dialog[open]');
+    list.style.position = inDialog ? 'absolute' : 'fixed';
+    getPortalHost().appendChild(list);
 
     let active = -1; // index dans list.children
     const HILITE_BG = '#2563eb';    // bleu bien visible
     const HILITE_TX = '#ffffff';    // texte blanc
     const HOVER_BG  = '#111827';    // hover souris (foncé)
-    
+    list.style.zIndex = '2147483646';
+
     const setActive = (i) => {
       const n = list.children.length;
       if (!n) { active = -1; return; }
@@ -1155,17 +1191,30 @@ function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, mi
       }
       hideList();
       updateClear();
+      if (typeof onPick === 'function') {
+        try { onPick(item); } catch {}
+      }
     };
 
 
     const positionList = () => {
       const r = input.getBoundingClientRect();
-      list.style.left  = `${Math.round(r.left)}px`;
-      list.style.top   = `${Math.round(r.bottom + 2)}px`;
-      list.style.width = `${Math.round(r.width)}px`;
+      if (inDialog) {
+        const host = portalHost.getBoundingClientRect();
+        list.style.left  = `${Math.round(r.left - host.left)}px`;
+        list.style.top   = `${Math.round(r.bottom - host.top + 2)}px`;
+        list.style.width = `${Math.round(r.width)}px`;
+      } else {
+        list.style.left  = `${Math.round(r.left)}px`;
+        list.style.top   = `${Math.round(r.bottom + 2)}px`;
+        list.style.width = `${Math.round(r.width)}px`;
+      }
     };
 
+
     const showList = () => {
+      const host = getPortalHost();
+      if (list.parentNode !== host) host.appendChild(list);
       hideAllPickerLists(list);
       positionList();
       list.style.display = 'block';
@@ -1196,7 +1245,13 @@ function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, mi
       a._item = it;
       a.onmouseenter = () => setActive(idx);
       a.onmouseleave = () => { if (active !== idx) { a.style.background = 'transparent'; a.style.color = ''; } };
-      a.onclick = (ev) => { ev.stopPropagation(); choose(it); };
+      a.onmousedown = (ev) => {
+        ev.preventDefault();    // évite de déplacer le focus
+        ev.stopPropagation();
+        choose(it);
+      };
+      // on neutralise le click qui suivra le mousedown
+      a.onclick = (ev) => ev.preventDefault();
       list.appendChild(a);
     });
     if (list.children.length) showList(); else hideList();
@@ -1230,12 +1285,13 @@ function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, mi
     input.addEventListener('focus', (e) => {
       e.stopPropagation();
       hideAllPickerLists(list);
-      openIfNeeded();
+        if (minChars === 0) runSearch(''); else openIfNeeded();
+;
     });
     input.addEventListener('click', (e) => {
       e.stopPropagation();
       hideAllPickerLists(list);
-      openIfNeeded();
+        if (minChars === 0) runSearch(''); else openIfNeeded();
     });
 
     // fermeture si clic ailleurs
