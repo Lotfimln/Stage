@@ -73,7 +73,7 @@ export SECRET_KEY="dev"
 export TOKEN_TTL_MIN=360
 
 # 4) Démarrer l’API
-python app.py
+py app.py
 # L’API écoute sur http://127.0.0.1:5000
 
 ```
@@ -96,7 +96,7 @@ Plusieurs options possibles :
 ### Python HTTP server
 ```
 cd frontend
-python -m http.server 5500
+py -m http.server 5500
 # Puis ouvrir http://127.0.0.1:5500/frontend/
 ```
 ## Utilisation (UI)
@@ -243,4 +243,5 @@ curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:5000/api/themes/find?q=
 ## Sécurité
 
 - Les identifiants en dur (USERS) et la SECRET_KEY de dev ne doivent pas être utilisés pour le déploiement.
+
 
