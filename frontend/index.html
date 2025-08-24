@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Prototype CSR – IRIT</title>
-  <!-- styles globaux -->
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
@@ -25,7 +24,6 @@
 
       <button class="primary" type="submit" style="width:100%; margin-top:16px">Se connecter</button>
 
-      <!-- même id “status” que dans l’app (vu unique à l’écran à la fois) -->
       <div id="status" class="muted" style="margin-top:10px">Prêt.</div>
     </form>
   </div>
@@ -47,7 +45,6 @@
       </div>
     </header>
 
-    <!-- NOUVEL agencement : colonne gauche (Thèmes + Détails), colonne droite (Personnes) -->
     <main class="layout">
       <!-- Colonne gauche -->
       <div class="col-left">
@@ -63,14 +60,14 @@
           <div id="tree" style="margin-top:10px"></div>
         </section>
 
-        <!-- Détails (sous l’arbre) -->
+        <!-- Détails -->
         <section class="card">
           <h3 style="margin:6px 0 8px">Détails</h3>
           <div id="details" class="muted">Sélectionne un nœud pour voir ses infos.</div>
         </section>
       </div>
 
-      <!-- Colonne droite : Recherche personnes -->
+      <!-- Colonne droite -->
       <div class="col-right">
         <section class="card people">
           <h3 style="margin:6px 0 8px">Recherche personnes</h3>
@@ -102,7 +99,6 @@
             <button id="btnSearch" class="primary">Rechercher (thème sélectionné)</button>
             <button id="btnNonPos">Non positionnés</button>
 
-            <!-- NOUVEAU : ajout global -->
             <button id="btnOpenAdd" class="primary">Ajouter un positionnement</button>
           </div>
 
@@ -126,14 +122,14 @@
     </main>
   </div>
 
-  <!-- Modale d’ajout universel de positionnement (autocomplétion personne + thème) -->
+  <!-- autocomplétion personne + thème -->
   <dialog id="dlgAddPos">
     <form method="dialog" id="formAddPos" class="card" style="min-width:520px">
       <h3 style="margin:0 0 12px">Ajouter un positionnement</h3>
 
     <!-- Personne -->
     <div class="small muted">Personne</div>
-    <!-- champ libre avec datalist optionnelle -->
+    <!-- champ libre avec datalist -->
     <input id="ap_person" list="dlPersons" type="text" placeholder="Tape un nom (optionnel)">
     <datalist id="dlPersons"></datalist>
     <input type="hidden" id="ap_idpers">
@@ -141,7 +137,7 @@
 
     <!-- Thème -->
     <div class="small muted">Thème</div>
-    <!-- champ libre avec datalist optionnelle -->
+    <!-- champ libre avec datalist -->
     <input id="ap_theme" list="dlThemes" type="text" placeholder="Tape un thème (optionnel)" style="margin-bottom:8px">
     <datalist id="dlThemes"></datalist>
 
@@ -166,7 +162,7 @@
         </label>
       </div>
 
-      <!-- Structure (facultatif) -->
+      <!-- Structure -->
       <details style="margin:8px 0">
         <summary class="small muted">Structure (optionnel)</summary>
         <div class="row" style="gap:8px; margin-top:8px">
