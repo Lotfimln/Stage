@@ -40,9 +40,12 @@
         <label class="small muted">JWT&nbsp;:</label>
         <input id="token" type="text" placeholder="Colle ton token ici (Bearer …)" />
         <button id="save" class="primary">Enregistrer</button>
+        <button id="openDashboard">Dashboard</button>
         <button id="check">Ping /api/health</button>
         <span id="whoami" class="small muted" style="margin-left:8px"></span>
         <button id="logoutBtn" style="margin-left:auto">Se déconnecter</button>
+        <section id="dashboard" style="display:none;"></section>
+
       </div>
     </header>
 
@@ -202,6 +205,7 @@
   <script src="./js/core.js" defer></script>
   <script src="./js/app.js" defer></script>
   <script src="./js/script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </body>
 </html>

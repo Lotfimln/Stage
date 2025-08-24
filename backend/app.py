@@ -1037,6 +1037,102 @@ def structures_find():
     rows = fetch_all(sql, {"q": q, "likeq": likeq})
     return jsonify(rows)
 
+# --------- DASHBOARD STATS ---------
+@app.get("/api/stats/overview")
+@require_auth
+def stats_overview():
+    sql = """
+    SELECT
+      (SELECT COUNT(*) FROM POSITIONNEMENT) AS positions_total,
+      (SELECT COUNT(*) FROM PERSONNE) AS people_total,
+      (SELECT COUNT(*) FROM THEMES) AS themes_total,
+      (SELECT COUNT(DISTINCT p.IDSTRUCTURE) FROM POSITIONNEMENT p WHERE p.IDSTRUCTURE IS NOT NULL) AS structures_total,
+      (SELECT COUNT(*) FROM PERSONNE per
+         WHERE NOT EXISTS (
+           SELECT 1 FROM POSITIONNEMENT p
+           WHERE p.IDPERS = per.PE_PE_COD# AND p.LIBELLETEMPORALITE = 'Présent'
+         )
+      ) AS non_positionnes
+    FROM dual
+    """
+    row = fetch_one(sql, {})
+    return jsonify(row)
+
+
+@app.get("/api/stats/top/themes")
+@require_auth
+def stats_top_themes():
+    limit = int(request.args.get("limit", 10))
+    sql = """
+    SELECT * FROM (
+      SELECT
+        t.CS_TH_COD# AS id,
+        t.THEME      AS label,
+        COUNT(*)     AS cnt
+      FROM POSITIONNEMENT p
+      JOIN THEMES t ON t.CS_TH_COD# = p.IDTHEME
+      GROUP BY t.CS_TH_COD#, t.THEME
+      ORDER BY cnt DESC
+    )
+    WHERE ROWNUM <= :limit
+    """
+    rows = fetch_all(sql, {"limit": limit})
+    return jsonify(rows)
+
+
+@app.get("/api/stats/top/structures")
+@require_auth
+def stats_top_structures():
+    limit = int(request.args.get("limit", 10))
+    sql = """
+    SELECT * FROM (
+      SELECT
+        p.IDSTRUCTURE AS id,
+        COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE)) AS label,
+        COUNT(*) AS cnt
+      FROM POSITIONNEMENT p
+      WHERE p.IDSTRUCTURE IS NOT NULL
+      GROUP BY p.IDSTRUCTURE, COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE))
+      ORDER BY cnt DESC
+    )
+    WHERE ROWNUM <= :limit
+    """
+    rows = fetch_all(sql, {"limit": limit})
+    return jsonify(rows)
+
+
+@app.get("/api/stats/distribution")
+@require_auth
+def stats_distribution():
+    sql_role = """
+      SELECT NVL(LIBCONTRIBUTION,'(N/A)') AS label, COUNT(*) AS cnt
+      FROM POSITIONNEMENT
+      GROUP BY NVL(LIBCONTRIBUTION,'(N/A)')
+      ORDER BY cnt DESC
+    """
+    sql_temp = """
+      SELECT NVL(LIBELLETEMPORALITE,'(N/A)') AS label, COUNT(*) AS cnt
+      FROM POSITIONNEMENT
+      GROUP BY NVL(LIBELLETEMPORALITE,'(N/A)')
+      ORDER BY cnt DESC
+    """
+    sql_mode = """
+      SELECT
+        SUM(CASE WHEN AUTO_GENERE = '0' THEN 1 ELSE 0 END) AS auto_cnt,
+        SUM(CASE WHEN AUTO_GENERE IS NULL OR AUTO_GENERE <> '0' THEN 1 ELSE 0 END) AS manu_cnt
+      FROM POSITIONNEMENT
+    """
+    role = fetch_all(sql_role, {})
+    temp = fetch_all(sql_temp, {})
+    mode = fetch_one(sql_mode, {})
+    mode_rows = [
+        {"label": "AUTO", "cnt": int(mode.get("AUTO_CNT", 0) if isinstance(mode, dict) else mode[0])},
+        {"label": "MANU", "cnt": int(mode.get("MANU_CNT", 0) if isinstance(mode, dict) else mode[1])},
+    ]
+    return jsonify({"role": role, "temporalite": temp, "mode": mode_rows})
+
+
+
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5000)
 
