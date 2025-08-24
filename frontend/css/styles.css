@@ -320,3 +320,49 @@ dialog.dlg {
 }
 .kpi > div{ font-size:22px; font-weight:700; }
 .kpi > span{ color:#94a3b8; font-size:12px; }
+/* === DASHBOARD ============================== */
+.dash-wrap { margin-top: 10px; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.kpi {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.kpi .kpi-title { font-size: 12px; color: #9CA3AF; margin-bottom: 4px; }
+.kpi .kpi-value { font-size: 22px; font-weight: 700; }
+
+.chart-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.chart-card {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 8px;
+}
+.chart-title {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin: 2px 6px 6px;
+}
+
+/* IMPORTANT: ECharts lit la taille du conteneur. */
+.chart {
+  width: 100%;
+  height: 320px;     /* hauteur standard */
+}
+.chart.small {
+  height: 260px;     /* pour donuts / pie */
+}
+
+/* Faire un panneau double largeur quand nécessaire */
+.span-2 { grid-column: span 2; }
