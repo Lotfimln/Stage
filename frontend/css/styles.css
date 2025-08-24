@@ -320,49 +320,47 @@ dialog.dlg {
 }
 .kpi > div{ font-size:22px; font-weight:700; }
 .kpi > span{ color:#94a3b8; font-size:12px; }
-/* === DASHBOARD ============================== */
-.dash-wrap { margin-top: 10px; }
+/* ==== Dashboard layout ==== */
+#dashboard { padding: 12px 16px; }
 
-.kpi-grid {
+.dash-counters {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
+  margin-bottom: 16px;
 }
-.kpi {
-  background: #0f172a;
-  border: 1px solid #1f2937;
-  border-radius: 10px;
-  padding: 10px 12px;
+.dash-card {
+  background:#0f172a;
+  border:1px solid #1f2937;
+  border-radius:12px;
+  padding:12px;
 }
-.kpi .kpi-title { font-size: 12px; color: #9CA3AF; margin-bottom: 4px; }
-.kpi .kpi-value { font-size: 22px; font-weight: 700; }
+.kpi { font-size:22px; font-weight:600; }
+.kpi-label { font-size:12px; color:#9ca3af; }
 
-.chart-grid {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.dash-grid {
+  display:grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap:16px;
 }
-.chart-card {
-  background: #0f172a;
-  border: 1px solid #1f2937;
-  border-radius: 10px;
-  padding: 8px;
-}
-.chart-title {
-  font-size: 12px;
-  color: #9CA3AF;
-  margin: 2px 6px 6px;
-}
+.col-span-12 { grid-column: span 12 / span 12; }
+.lg\:col-span-8 { grid-column: span 12 / span 12; }
+.lg\:col-span-4 { grid-column: span 12 / span 12; }
+.lg\:col-span-6 { grid-column: span 12 / span 12; }
 
-/* IMPORTANT: ECharts lit la taille du conteneur. */
-.chart {
-  width: 100%;
-  height: 320px;     /* hauteur standard */
-}
-.chart.small {
-  height: 260px;     /* pour donuts / pie */
+/* petit responsive */
+@media (min-width: 1024px) {
+  .lg\:col-span-8 { grid-column: span 8 / span 8; }
+  .lg\:col-span-4 { grid-column: span 4 / span 4; }
+  .lg\:col-span-6 { grid-column: span 6 / span 6; }
 }
 
-/* Faire un panneau double largeur quand nécessaire */
-.span-2 { grid-column: span 2; }
+.card-title { font-size:12px; color:#9ca3af; margin-bottom:8px; }
+
+/* Chart canvases: éviter les scrollbars géants */
+#dashboard canvas {
+  width: 100% !important;
+  max-width: 100%;
+  display: block;
+}
+

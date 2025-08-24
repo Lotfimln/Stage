@@ -1,106 +1,91 @@
 (() => {
   const { api } = window.core;
+  if (!document.getElementById('dashboard')) return;
 
-  const bindDashboard = () => {
-    const btn   = document.getElementById('openDashboard');
-    const panel = document.getElementById('dashboard');
-    if (!btn || !panel) return;
+  const charts = [];
+  const addChart = (ctx, cfg) => { const c = new Chart(ctx, cfg); charts.push(c); return c; };
+  const clearCharts = () => charts.splice(0).forEach(c => c.destroy());
 
-    let charts = {};
-    let loadedOnce = false;
+  // util pour lire une clé peu importe la casse/le nom
+  const pick = (obj, ...keys) => {
+    for (const k of keys) if (obj[k] != null) return obj[k];
+    return 0;
+  };
 
-    async function ensureMarkup() {
-      if (panel.childElementCount) return;
-      try {
-        const res = await fetch('dashboard.html', { cache: 'no-store' });
-        if (res.ok) panel.innerHTML = await res.text();
-      } catch {}
-    }
+  async function loadOverview() {
+    // BACK: /api/stats/overview  -> { positions_total, people_total, themes_total, structures_total, non_positionnes }
+    const o = await api('/api/stats/overview');
 
-    btn.onclick = async () => {
-      const show = panel.style.display === 'none' || panel.style.display === '';
-      if (show) {
-        await ensureMarkup();
-        panel.style.display = '';
-        if (!loadedOnce) {
-          loadedOnce = true;
-          await loadDashboard();
-        }
-      } else {
-        panel.style.display = 'none';
-      }
-    };
-
-    async function loadDashboard(){
-    try {
-      // KPIs
-      const o = await api('/api/stats/overview');
-      setKPI('kpi-positions', o.positions_total ?? o.POSITIONS_TOTAL ?? '–');
-      setKPI('kpi-people',    o.people_total    ?? o.PEOPLE_TOTAL    ?? '–');
-      setKPI('kpi-themes',    o.themes_total    ?? o.THEMES_TOTAL    ?? '–');
-      setKPI('kpi-structures',o.structures_total?? o.STRUCTURES_TOTAL?? '–');
-      setKPI('kpi-nonpos',    o.non_positionnes ?? o.NON_POSITIONNES ?? '–');
-
-      // Top
-      const [topThemes, topStructs] = await Promise.all([
-        api('/api/stats/top/themes?limit=8'),
-        api('/api/stats/top/structures?limit=8')
-      ]);
-
-      // Distributions
-      const dist = await api('/api/stats/distribution');
-
-      drawBar('chTopThemes',   'Top thématiques', pairs(topThemes));
-      drawBar('chTopStructs',  'Top structures',  pairs(topStructs));
-      drawPie('chRole',        'Rôles',           pairs(dist.role || []));
-      drawPie('chTemp',        'Temporalité',     pairs(dist.temporalite || []));
-      drawPie('chMode',        'Mode',            pairs(dist.mode || []));
-
-    } catch(e){
-      console.error(e);
-      if (window.setStatus) setStatus('❌ Dashboard: ' + (e?.message || e), 'err');
-    }
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+    set('kpiPositions',   pick(o, 'positions_total', 'POSITIONS_TOTAL'));
+    set('kpiPeople',      pick(o, 'people_total', 'PEOPLE_TOTAL'));
+    set('kpiThemes',      pick(o, 'themes_total', 'THEMES_TOTAL'));
+    set('kpiStructs',     pick(o, 'structures_total', 'STRUCTURES_TOTAL'));
+    set('kpiNonPos',      pick(o, 'non_positionnes', 'NON_POSITIONNES'));
   }
 
-  function setKPI(id, v){ const el = document.getElementById(id); if (el) el.textContent = v; }
-  function pairs(rows){
-    const L=[], D=[];
-    (rows||[]).forEach(r=>{
-      const lab = r.label ?? r.LABEL ?? r.theme ?? r.THEME ?? r.id ?? r.ID ?? '';
-      const cnt = Number(r.cnt ?? r.CNT ?? 0);
-      L.push(String(lab)); D.push(cnt);
-    });
-    return { labels:L, data:D };
-  }
+  async function loadCharts() {
+    clearCharts();
 
-  function ctx(id){ const el = document.getElementById(id); return el ? el.getContext('2d') : null; }
-  function destroy(id){ if (charts[id]) { charts[id].destroy(); charts[id] = null; } }
+    // BACK:
+    // /api/stats/top/themes        -> [{id,label,cnt}]
+    // /api/stats/top/structures    -> [{id,label,cnt}]
+    // /api/stats/distribution      -> { role:[{label,cnt}], temporalite:[{label,cnt}], mode:[{label,cnt}] }
+    const [themes, structs, dist] = await Promise.all([
+      api('/api/stats/top/themes?limit=8'),
+      api('/api/stats/top/structures?limit=8'),
+      api('/api/stats/distribution'),
+    ]);
 
-  function drawBar(id, title, serie){
-    const c = ctx(id); if (!c || typeof Chart==='undefined') return;
-    destroy(id);
-    charts[id] = new Chart(c, {
+    const ctxTopThemes  = document.getElementById('chTopThemes').getContext('2d');
+    const ctxTopStructs = document.getElementById('chTopStructs').getContext('2d');
+    const ctxRoles      = document.getElementById('chRoles').getContext('2d');
+    const ctxMode       = document.getElementById('chMode').getContext('2d');
+
+    addChart(ctxTopThemes, {
       type: 'bar',
-      data: { labels: serie.labels, datasets: [{ label:title, data: serie.data }] },
-      options: {
-        responsive:true,
-        plugins:{ legend:{ display:false }, title:{ display:true, text:title } },
-        scales:{ x:{ ticks:{ autoSkip:false, maxRotation:40, minRotation:0 } } }
-      }
+      data: {
+        labels: themes.map(x => x.label),
+        datasets: [{ label: 'Thématiques', data: themes.map(x => pick(x, 'cnt', 'CNT')) }]
+      },
+      options: { responsive:true, maintainAspectRatio:false }
     });
-  }
 
-  function drawPie(id, title, serie){
-    const c = ctx(id); if (!c || typeof Chart==='undefined') return;
-    destroy(id);
-    charts[id] = new Chart(c, {
+    addChart(ctxTopStructs, {
+      type: 'bar',
+      data: {
+        labels: structs.map(x => x.label),
+        datasets: [{ label: 'Structures', data: structs.map(x => pick(x, 'cnt', 'CNT')) }]
+      },
+      options: { responsive:true, maintainAspectRatio:false }
+    });
+
+    const roles = (dist.role || dist.roles || []).map(x => pick(x, 'cnt', 'CNT'));
+    addChart(ctxRoles, {
       type: 'doughnut',
-      data: { labels: serie.labels, datasets:[{ data: serie.data }] },
-      options: { responsive:true, plugins:{ title:{ display:true, text:title } } }
+      data: {
+        labels: (dist.role || dist.roles || []).map(x => x.label),
+        datasets: [{ data: roles }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%' }
+    });
+
+    const modes = (dist.mode || []).map(x => pick(x, 'cnt', 'CNT'));
+    addChart(ctxMode, {
+      type: 'doughnut',
+      data: {
+        labels: (dist.mode || []).map(x => x.label),
+        datasets: [{ data: modes }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%' }
     });
   }
-}
 
+  async function init() {
+    await loadOverview();
+    await loadCharts();
+    window.addEventListener('resize', () => charts.forEach(c => c.resize()));
+  }
 
-  window.bindDashboard = bindDashboard;
+  document.addEventListener('DOMContentLoaded', init);
 })();

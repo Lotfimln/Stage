@@ -1038,6 +1038,11 @@ def structures_find():
     return jsonify(rows)
 
 # --------- DASHBOARD STATS ---------
+
+@app.route('/dashboard')
+def ui_dashboard():
+    return send_from_directory(FRONTEND_DIR, 'dashboard.html')
+
 @app.get("/api/stats/overview")
 @require_auth
 def stats_overview():
