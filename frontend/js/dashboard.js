@@ -1,73 +1,78 @@
 (() => {
-  const { api } = window.core || {};
-
-  // Ne s'exécute que sur dashboard.html
-  if (!document.getElementById('dashboard-page')) return;
+  const { api } = window.core;
+  if (!document.getElementById('chTopThemes')) return;
 
   const charts = [];
-  const addChart = (id, cfg) => {
-    const ctx = document.getElementById(id).getContext('2d');
-    const c = new Chart(ctx, cfg);
-    charts.push(c);
-    return c;
-  };
+  const addChart = (ctx, cfg) => { const c = new Chart(ctx, cfg); charts.push(c); return c; };
   const clearCharts = () => charts.splice(0).forEach(c => c.destroy());
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = (v ?? '—').toString(); };
 
   async function loadOverview() {
-    const o = await api('/api/stats/overview'); // {positions_total, people_total, themes_total, structures_total, non_positionnes}
-    set('kpiPositions',  o.positions_total);
-    set('kpiPeople',     o.people_total);
-    set('kpiThemes',     o.themes_total);
-    set('kpiStructs',    o.structures_total);
-    set('kpiNonPos',     o.non_positionnes);
-  }
+    const o = await api('/api/stats/overview');
+    const set = (id,v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
 
-  const num = x => x?.cnt ?? x?.CNT ?? x?.count ?? 0;
+    set('kpiPeoplePos', o.people_pos);
+    set('kpiPeopleNonPos', o.people_non_pos);
+    set('kpiThemesActifs', o.themes_actifs);
+    set('kpiStructsActives', o.structures_actives);
+    set('kpiAvgThemesPerPerson', o.avg_themes_per_person);
+  }
 
   async function loadCharts() {
     clearCharts();
-
     const [themes, structs, dist] = await Promise.all([
       api('/api/stats/top/themes?limit=8'),
       api('/api/stats/top/structures?limit=8'),
       api('/api/stats/distribution'),
     ]);
 
-    addChart('chTopThemes', {
+    // Top thématiques
+    addChart(document.getElementById('chTopThemes'), {
       type: 'bar',
       data: {
         labels: themes.map(x => x.label),
-        datasets: [{ label: 'Thèmes', data: themes.map(num) }]
+        datasets: [{ label: 'Personnes', data: themes.map(x => x.cnt) }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: { responsive:true, maintainAspectRatio:false }
     });
 
-    addChart('chTopStructs', {
+    // Top structures
+    addChart(document.getElementById('chTopStructs'), {
       type: 'bar',
       data: {
         labels: structs.map(x => x.label),
-        datasets: [{ label: 'Structures', data: structs.map(num) }]
+        datasets: [{ label: 'Personnes', data: structs.map(x => x.cnt) }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: { responsive:true, maintainAspectRatio:false }
     });
 
-    addChart('chRoles', {
+    // Rôles (Présent)
+    addChart(document.getElementById('chRoles'), {
       type: 'doughnut',
-      data: { labels: dist.role.map(x => x.label), datasets: [{ data: dist.role.map(num) }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '60%' }
+      data: {
+        labels: dist.role.map(x => x.label),
+        datasets: [{ data: dist.role.map(x => x.cnt) }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%' }
     });
 
-    addChart('chTemps', {
+    // Temporalité
+    addChart(document.getElementById('chTempo'), {
       type: 'doughnut',
-      data: { labels: dist.temporalite.map(x => x.label), datasets: [{ data: dist.temporalite.map(num) }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '60%' }
+      data: {
+        labels: dist.temporalite.map(x => x.label),
+        datasets: [{ data: dist.temporalite.map(x => x.cnt) }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%' }
     });
 
-    addChart('chMode', {
+    // Mode
+    addChart(document.getElementById('chMode'), {
       type: 'doughnut',
-      data: { labels: dist.mode.map(x => x.label), datasets: [{ data: dist.mode.map(num) }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '60%' }
+      data: {
+        labels: dist.mode.map(x => x.label),
+        datasets: [{ data: dist.mode.map(x => x.cnt) }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%' }
     });
   }
 

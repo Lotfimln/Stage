@@ -1057,21 +1057,43 @@ def structures_find():
 def stats_overview():
     sql = """
     SELECT
-      (SELECT COUNT(*) FROM POSITIONNEMENT) AS positions_total,
-      (SELECT COUNT(*) FROM PERSONNE) AS people_total,
-      (SELECT COUNT(*) FROM THEMES) AS themes_total,
-      (SELECT COUNT(DISTINCT p.IDSTRUCTURE) FROM POSITIONNEMENT p WHERE p.IDSTRUCTURE IS NOT NULL) AS structures_total,
+      /* personnes positionnées (Présent) */
+      (SELECT COUNT(*) FROM (
+         SELECT DISTINCT p.IDPERS
+         FROM POSITIONNEMENT p
+         WHERE p.LIBELLETEMPORALITE = 'Présent'
+      )) AS people_pos,
+
+      /* personnes non positionnées (Présent) */
       (SELECT COUNT(*) FROM PERSONNE per
          WHERE NOT EXISTS (
            SELECT 1 FROM POSITIONNEMENT p
            WHERE p.IDPERS = per.PE_PE_COD# AND p.LIBELLETEMPORALITE = 'Présent'
          )
-      ) AS non_positionnes
+      ) AS people_non_pos,
+
+      /* thèmes actifs (au moins une personne Présent) */
+      (SELECT COUNT(DISTINCT p.IDTHEME)
+         FROM POSITIONNEMENT p
+         WHERE p.LIBELLETEMPORALITE = 'Présent') AS themes_actifs,
+
+      /* structures actives (au moins une personne Présent) */
+      (SELECT COUNT(DISTINCT p.IDSTRUCTURE)
+         FROM POSITIONNEMENT p
+         WHERE p.LIBELLETEMPORALITE = 'Présent'
+           AND p.IDSTRUCTURE IS NOT NULL) AS structures_actives,
+
+      /* moyenne de thèmes par personne (Présent) arrondie à 1 décimale */
+      (SELECT ROUND(AVG(nb), 1) FROM (
+         SELECT p.IDPERS, COUNT(DISTINCT p.IDTHEME) AS nb
+         FROM POSITIONNEMENT p
+         WHERE p.LIBELLETEMPORALITE = 'Présent'
+         GROUP BY p.IDPERS
+      )) AS avg_themes_per_person
     FROM dual
     """
     row = fetch_one(sql, {})
     return jsonify(row)
-
 
 @app.get("/api/stats/top/themes")
 @require_auth
@@ -1082,9 +1104,10 @@ def stats_top_themes():
       SELECT
         t.CS_TH_COD# AS id,
         t.THEME      AS label,
-        COUNT(*)     AS cnt
+        COUNT(DISTINCT p.IDPERS) AS cnt
       FROM POSITIONNEMENT p
       JOIN THEMES t ON t.CS_TH_COD# = p.IDTHEME
+      WHERE p.LIBELLETEMPORALITE = 'Présent'
       GROUP BY t.CS_TH_COD#, t.THEME
       ORDER BY cnt DESC
     )
@@ -1103,9 +1126,10 @@ def stats_top_structures():
       SELECT
         p.IDSTRUCTURE AS id,
         COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE)) AS label,
-        COUNT(*) AS cnt
+        COUNT(DISTINCT p.IDPERS) AS cnt
       FROM POSITIONNEMENT p
       WHERE p.IDSTRUCTURE IS NOT NULL
+        AND p.LIBELLETEMPORALITE = 'Présent'
       GROUP BY p.IDSTRUCTURE, COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE))
       ORDER BY cnt DESC
     )
@@ -1115,12 +1139,14 @@ def stats_top_structures():
     return jsonify(rows)
 
 
+
 @app.get("/api/stats/distribution")
 @require_auth
 def stats_distribution():
     sql_role = """
       SELECT NVL(LIBCONTRIBUTION,'(N/A)') AS label, COUNT(*) AS cnt
       FROM POSITIONNEMENT
+      WHERE LIBELLETEMPORALITE = 'Présent'
       GROUP BY NVL(LIBCONTRIBUTION,'(N/A)')
       ORDER BY cnt DESC
     """
@@ -1144,7 +1170,6 @@ def stats_distribution():
         {"label": "MANU", "cnt": int(mode.get("MANU_CNT", 0) if isinstance(mode, dict) else mode[1])},
     ]
     return jsonify({"role": role, "temporalite": temp, "mode": mode_rows})
-
 
 
 if __name__ == "__main__":
