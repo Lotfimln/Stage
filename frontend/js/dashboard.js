@@ -1,8 +1,6 @@
 (() => {
   const { api } = window.core;
 
-  // ==== colle ici le contenu de ton ancien function bindDashboard() ====
-  // Au lieu de "function bindDashboard(){ ... }", fais :
   const bindDashboard = () => {
     const btn   = document.getElementById('openDashboard');
     const panel = document.getElementById('dashboard');
@@ -104,6 +102,5 @@
 }
 
 
-  // expose pour que l’appel depuis app.js fonctionne
   window.bindDashboard = bindDashboard;
 })();
