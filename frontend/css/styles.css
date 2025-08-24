@@ -320,6 +320,7 @@ dialog.dlg {
 }
 .kpi > div{ font-size:22px; font-weight:700; }
 .kpi > span{ color:#94a3b8; font-size:12px; }
+
 /* ==== Dashboard layout ==== */
 #dashboard { padding: 12px 16px; }
 
@@ -362,5 +363,42 @@ dialog.dlg {
   width: 100% !important;
   max-width: 100%;
   display: block;
+}
+.dashboard .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.dashboard .kpi {
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 12px;
+}
+.dashboard .kpi-title { font-size: 12px; color: #9ca3af; }
+.dashboard .kpi-val   { font-size: 22px; font-weight: 600; }
+
+.dashboard .charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.dashboard .card {
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 12px;
+  height: 320px;
+}
+.dashboard .card h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+.dashboard .card canvas {
+  width: 100% !important;
+  height: calc(100% - 24px) !important;
 }
 

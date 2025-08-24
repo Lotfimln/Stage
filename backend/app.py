@@ -1,12 +1,24 @@
 
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, send_from_directory, abort
 from flask_cors import CORS
 import os, datetime, jwt
 from db import fetch_all, fetch_one, execute
 import secrets
 from functools import wraps
 
-app = Flask(__name__)
+BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
+FRONT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'frontend'))
+
+app = Flask(__name__, static_folder=FRONT_DIR, static_url_path='')
+
+@app.get('/')
+def front_index():
+    return send_from_directory(FRONT_DIR, 'index.html')
+
+@app.get('/dashboard')
+def front_dashboard():
+    return send_from_directory(FRONT_DIR, 'dashboard.html')
+
 
 # 1) Clés & config
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
@@ -1039,9 +1051,6 @@ def structures_find():
 
 # --------- DASHBOARD STATS ---------
 
-@app.route('/dashboard')
-def ui_dashboard():
-    return send_from_directory(FRONTEND_DIR, 'dashboard.html')
 
 @app.get("/api/stats/overview")
 @require_auth
