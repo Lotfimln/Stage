@@ -9,7 +9,6 @@
 </head>
 <body class="bg-slate-900 text-slate-200">
 
-  <!-- HEADER simple avec retour -->
   <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1f2937;position:sticky;top:0;background:#0b1220;z-index:10">
     <a href="index.html" style="text-decoration:none;color:#93c5fd">← Accueil</a>
     <h1 style="margin:0;font-size:18px;color:#e5e7eb">Dashboard</h1>
@@ -17,47 +16,43 @@
   </header>
 
   <main style="padding:16px;max-width:1400px;margin:0 auto">
+    
     <!-- KPIs -->
-    <section style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px">
-      <div class="card kpi"><div class="kpi-title">Pers. positionnées</div><div id="kpiPeoplePos" class="kpi-value">—</div></div>
-      <div class="card kpi"><div class="kpi-title">Pers. non positionnées</div><div id="kpiPeopleNonPos" class="kpi-value">—</div></div>
-      <div class="card kpi"><div class="kpi-title">Thématiques actives</div><div id="kpiThemesActifs" class="kpi-value">—</div></div>
-      <div class="card kpi"><div class="kpi-title">Structures actives</div><div id="kpiStructsActives" class="kpi-value">—</div></div>
-      <div class="card kpi"><div class="kpi-title">Thèmes / personne</div><div id="kpiAvgThemesPerPerson" class="kpi-value">—</div></div>
+   <section class="kpis">
+        <div class="card kpi"><h4>Pers. positionnées (Présent)</h4><div id="kpiPersPresent" class="v">—</div></div>
+        <div class="card kpi"><h4>Pers. non positionnées (Présent)</h4><div id="kpiNonPos" class="v">—</div></div>
+        <div class="card kpi"><h4>Thématiques actives (Présent)</h4><div id="kpiThemes" class="v">—</div></div>
+        <div class="card kpi"><h4>Structures actives (Présent)</h4><div id="kpiStructs" class="v">—</div></div>
+        <div class="card kpi"><h4>Thèmes / personne (moy.)</h4><div id="kpiAvg" class="v">—</div></div>
     </section>
-
+    
     <!-- Charts -->
-    <section style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div class="card">
-        <div class="card-title">Top thématiques (personnes présentes)</div>
-        <div style="height:260px"><canvas id="chTopThemes"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Top structures (personnes présentes)</div>
-        <div style="height:260px"><canvas id="chTopStructs"></canvas></div>
-      </div>
-    </section>
+  <section class="dash-grid">
+    <div class="card span-6">
+      <h4>Top thématiques (personnes présentes)</h4>
+      <canvas id="chTopThemes" class="chart h240"></canvas>
+    </div>
+    <div class="card span-6">
+      <h4>Top structures (personnes présentes)</h4>
+      <canvas id="chTopStructs" class="chart h240"></canvas>
+    </div>
 
-    <section style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div class="card">
-        <div class="card-title">Rôles (Présent)</div>
-        <div style="height:260px"><canvas id="chRoles"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Temporalité</div>
-        <div style="height:260px"><canvas id="chTempo"></canvas></div>
-      </div>
-    </section>
-
-    <section>
-      <div class="card">
-        <div class="card-title">Mode</div>
-        <div style="height:220px"><canvas id="chMode"></canvas></div>
-      </div>
-    </section>
-  </main>
+    <div class="card span-4">
+      <h4>Rôles (Présent)</h4>
+      <canvas id="chRoles" class="chart h220"></canvas>
+    </div>
+    <div class="card span-4">
+      <h4>Temporalité</h4>
+      <canvas id="chTempo" class="chart h220"></canvas>
+    </div>
+    <div class="card span-4">
+      <h4>Mode</h4>
+      <canvas id="chMode" class="chart h220"></canvas>
+    </div>
+  </section>
 
   <script src="js/core.js"></script>
+  <script src="js/chart.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

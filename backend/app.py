@@ -1057,43 +1057,34 @@ def structures_find():
 def stats_overview():
     sql = """
     SELECT
-      /* personnes positionnées (Présent) */
-      (SELECT COUNT(*) FROM (
-         SELECT DISTINCT p.IDPERS
+      (SELECT COUNT(*) FROM POSITIONNEMENT) AS positions_total,
+      (SELECT COUNT(DISTINCT p.IDPERS)
          FROM POSITIONNEMENT p
-         WHERE p.LIBELLETEMPORALITE = 'Présent'
-      )) AS people_pos,
-
-      /* personnes non positionnées (Présent) */
-      (SELECT COUNT(*) FROM PERSONNE per
+         WHERE p.LIBELLETEMPORALITE='Présent') AS people_present,
+      (SELECT COUNT(*)
+         FROM PERSONNE per
          WHERE NOT EXISTS (
            SELECT 1 FROM POSITIONNEMENT p
-           WHERE p.IDPERS = per.PE_PE_COD# AND p.LIBELLETEMPORALITE = 'Présent'
-         )
-      ) AS people_non_pos,
-
-      /* thèmes actifs (au moins une personne Présent) */
+            WHERE p.IDPERS = per.PE_PE_COD#
+              AND p.LIBELLETEMPORALITE='Présent'
+         )) AS people_nonpos_present,
       (SELECT COUNT(DISTINCT p.IDTHEME)
          FROM POSITIONNEMENT p
-         WHERE p.LIBELLETEMPORALITE = 'Présent') AS themes_actifs,
-
-      /* structures actives (au moins une personne Présent) */
+         WHERE p.LIBELLETEMPORALITE='Présent') AS themes_active_present,
       (SELECT COUNT(DISTINCT p.IDSTRUCTURE)
          FROM POSITIONNEMENT p
-         WHERE p.LIBELLETEMPORALITE = 'Présent'
-           AND p.IDSTRUCTURE IS NOT NULL) AS structures_actives,
-
-      /* moyenne de thèmes par personne (Présent) arrondie à 1 décimale */
-      (SELECT ROUND(AVG(nb), 1) FROM (
-         SELECT p.IDPERS, COUNT(DISTINCT p.IDTHEME) AS nb
-         FROM POSITIONNEMENT p
-         WHERE p.LIBELLETEMPORALITE = 'Présent'
-         GROUP BY p.IDPERS
+         WHERE p.LIBELLETEMPORALITE='Présent' AND p.IDSTRUCTURE IS NOT NULL) AS structures_active_present,
+      (SELECT ROUND(AVG(nb),2) FROM (
+          SELECT COUNT(DISTINCT p.IDTHEME) nb
+          FROM POSITIONNEMENT p
+          WHERE p.LIBELLETEMPORALITE='Présent'
+          GROUP BY p.IDPERS
       )) AS avg_themes_per_person
     FROM dual
     """
     row = fetch_one(sql, {})
     return jsonify(row)
+
 
 @app.get("/api/stats/top/themes")
 @require_auth
@@ -1107,11 +1098,10 @@ def stats_top_themes():
         COUNT(DISTINCT p.IDPERS) AS cnt
       FROM POSITIONNEMENT p
       JOIN THEMES t ON t.CS_TH_COD# = p.IDTHEME
-      WHERE p.LIBELLETEMPORALITE = 'Présent'
+      WHERE p.LIBELLETEMPORALITE='Présent'
       GROUP BY t.CS_TH_COD#, t.THEME
       ORDER BY cnt DESC
-    )
-    WHERE ROWNUM <= :limit
+    ) WHERE ROWNUM <= :limit
     """
     rows = fetch_all(sql, {"limit": limit})
     return jsonify(rows)
@@ -1129,14 +1119,14 @@ def stats_top_structures():
         COUNT(DISTINCT p.IDPERS) AS cnt
       FROM POSITIONNEMENT p
       WHERE p.IDSTRUCTURE IS NOT NULL
-        AND p.LIBELLETEMPORALITE = 'Présent'
+        AND p.LIBELLETEMPORALITE='Présent'
       GROUP BY p.IDSTRUCTURE, COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE))
       ORDER BY cnt DESC
-    )
-    WHERE ROWNUM <= :limit
+    ) WHERE ROWNUM <= :limit
     """
     rows = fetch_all(sql, {"limit": limit})
     return jsonify(rows)
+
 
 
 
@@ -1144,9 +1134,9 @@ def stats_top_structures():
 @require_auth
 def stats_distribution():
     sql_role = """
-      SELECT NVL(LIBCONTRIBUTION,'(N/A)') AS label, COUNT(*) AS cnt
+      SELECT NVL(LIBCONTRIBUTION,'(N/A)') AS label, COUNT(DISTINCT IDPERS) AS cnt
       FROM POSITIONNEMENT
-      WHERE LIBELLETEMPORALITE = 'Présent'
+      WHERE LIBELLETEMPORALITE='Présent'
       GROUP BY NVL(LIBCONTRIBUTION,'(N/A)')
       ORDER BY cnt DESC
     """
@@ -1158,8 +1148,8 @@ def stats_distribution():
     """
     sql_mode = """
       SELECT
-        SUM(CASE WHEN AUTO_GENERE = '0' THEN 1 ELSE 0 END) AS auto_cnt,
-        SUM(CASE WHEN AUTO_GENERE IS NULL OR AUTO_GENERE <> '0' THEN 1 ELSE 0 END) AS manu_cnt
+        SUM(CASE WHEN AUTO_GENERE = '0' AND LIBELLETEMPORALITE='Présent' THEN 1 ELSE 0 END) AS auto_cnt,
+        SUM(CASE WHEN (AUTO_GENERE IS NULL OR AUTO_GENERE <> '0') AND LIBELLETEMPORALITE='Présent' THEN 1 ELSE 0 END) AS manu_cnt
       FROM POSITIONNEMENT
     """
     role = fetch_all(sql_role, {})

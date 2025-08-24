@@ -321,84 +321,40 @@ dialog.dlg {
 .kpi > div{ font-size:22px; font-weight:700; }
 .kpi > span{ color:#94a3b8; font-size:12px; }
 
-/* ==== Dashboard layout ==== */
-#dashboard { padding: 12px 16px; }
+/* --- Dashboard --- */
+.container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+.topbar { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.topbar h1 { font-size: 18px; margin: 0; color: #e5e7eb; }
+.back { color:#93c5fd; text-decoration:none; }
 
-.dash-counters {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+.kpis {
+  display:grid; gap:16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+  margin-bottom: 12px;
 }
-.dash-card {
-  background:#0f172a;
-  border:1px solid #1f2937;
-  border-radius:12px;
-  padding:12px;
+
+.card {
+  background:#0f172a; border:1px solid #1f2937;
+  border-radius:10px; padding:12px; box-shadow:0 8px 20px rgba(0,0,0,.25);
 }
-.kpi { font-size:22px; font-weight:600; }
-.kpi-label { font-size:12px; color:#9ca3af; }
+.kpi h4 { margin:0; font-size:12px; color:#9ca3af; }
+.kpi .v  { margin-top:6px; font-size:26px; font-weight:700; color:#e5e7eb; }
 
 .dash-grid {
-  display:grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap:16px;
+  display:grid; gap:16px;
+  grid-template-columns: repeat(12, minmax(0,1fr));
 }
-.col-span-12 { grid-column: span 12 / span 12; }
-.lg\:col-span-8 { grid-column: span 12 / span 12; }
-.lg\:col-span-4 { grid-column: span 12 / span 12; }
-.lg\:col-span-6 { grid-column: span 12 / span 12; }
+.span-4 { grid-column: span 4; }
+.span-6 { grid-column: span 6; }
 
-/* petit responsive */
-@media (min-width: 1024px) {
-  .lg\:col-span-8 { grid-column: span 8 / span 8; }
-  .lg\:col-span-4 { grid-column: span 4 / span 4; }
-  .lg\:col-span-6 { grid-column: span 6 / span 6; }
-}
+.chart { width:100%; }
+.h220 { height:220px; }
+.h240 { height:240px; }
 
-.card-title { font-size:12px; color:#9ca3af; margin-bottom:8px; }
-
-/* Chart canvases: éviter les scrollbars géants */
-#dashboard canvas {
-  width: 100% !important;
-  max-width: 100%;
-  display: block;
-}
-.dashboard .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(160px, 1fr));
-  gap: 12px;
-  margin: 8px 0 16px;
+/* Chart.js (thème sombre) */
+:root {
+  --grid-color: rgba(255,255,255,.08);
+  --tick-color: #cbd5e1;
 }
 
-.dashboard .kpi {
-  background: #0b1220;
-  border: 1px solid #1f2937;
-  border-radius: 8px;
-  padding: 12px;
-}
-.dashboard .kpi-title { font-size: 12px; color: #9ca3af; }
-.dashboard .kpi-val   { font-size: 22px; font-weight: 600; }
-
-.dashboard .charts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-.dashboard .card {
-  background: #0b1220;
-  border: 1px solid #1f2937;
-  border-radius: 8px;
-  padding: 12px;
-  height: 320px;
-}
-.dashboard .card h4 {
-  margin: 0 0 8px;
-  font-size: 14px;
-  color: #cbd5e1;
-}
-.dashboard .card canvas {
-  width: 100% !important;
-  height: calc(100% - 24px) !important;
-}
 
