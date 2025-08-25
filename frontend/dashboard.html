@@ -4,55 +4,151 @@
   <meta charset="utf-8" />
   <title>Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- fichiers réellement présents à la racine -->
+  <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body class="bg-slate-900 text-slate-200">
 
-  <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1f2937;position:sticky;top:0;background:#0b1220;z-index:10">
-    <a href="index.html" style="text-decoration:none;color:#93c5fd">← Accueil</a>
-    <h1 style="margin:0;font-size:18px;color:#e5e7eb">Dashboard</h1>
-    <span></span>
-  </header>
+<header class="topbar">
+  <a href="index.html" class="back">← Accueil</a>
+  <h1>Dashboard</h1>
+  <span></span>
+</header>
 
-  <main style="padding:16px;max-width:1400px;margin:0 auto">
-    
-    <!-- KPIs -->
-   <section class="kpis">
-        <div class="card kpi"><h4>Pers. positionnées (Présent)</h4><div id="kpiPersPresent" class="v">—</div></div>
-        <div class="card kpi"><h4>Pers. non positionnées (Présent)</h4><div id="kpiNonPos" class="v">—</div></div>
-        <div class="card kpi"><h4>Thématiques actives (Présent)</h4><div id="kpiThemes" class="v">—</div></div>
-        <div class="card kpi"><h4>Structures actives (Présent)</h4><div id="kpiStructs" class="v">—</div></div>
-        <div class="card kpi"><h4>Thèmes / personne (moy.)</h4><div id="kpiAvg" class="v">—</div></div>
-    </section>
-    
-    <!-- Charts -->
+<main class="container layout-dashboard">
+  <!-- Colonne KPI -->
+  <aside class="kpis">
+    <div class="card kpi"><h4>Pers. positionnées (Présent)</h4><div id="kpiPeople" class="v">—</div></div>
+    <div class="card kpi"><h4>Pers. non positionnées (Présent)</h4><div id="kpiNonPos" class="v">—</div></div>
+    <div class="card kpi"><h4>Thématiques actives (Présent)</h4><div id="kpiThemes" class="v">—</div></div>
+    <div class="card kpi"><h4>Structures actives (Présent)</h4><div id="kpiStructs" class="v">—</div></div>
+    <div class="card kpi"><h4>Thèmes / personne (moy.)</h4><div id="kpiAvg" class="v">—</div></div>
+  </aside>
+
+  <!-- Zone graphiques -->
   <section class="dash-grid">
-    <div class="card span-6">
+    <div class="card span-7 enlargeable">
       <h4>Top thématiques (personnes présentes)</h4>
-      <canvas id="chTopThemes" class="chart h240"></canvas>
-    </div>
-    <div class="card span-6">
-      <h4>Top structures (personnes présentes)</h4>
-      <canvas id="chTopStructs" class="chart h240"></canvas>
+      <div class="chart-wrap h260"><canvas id="chTopThemes" class="chart"></canvas></div>
     </div>
 
-    <div class="card span-4">
+    <div class="card span-5 enlargeable">
+      <h4>Top structures (personnes présentes)</h4>
+      <div class="chart-wrap h260"><canvas id="chTopStructs" class="chart"></canvas></div>
+    </div>
+
+    <div class="card span-6 enlargeable">
       <h4>Rôles (Présent)</h4>
-      <canvas id="chRoles" class="chart h220"></canvas>
+      <div class="chart-wrap h220"><canvas id="chRoles" class="chart"></canvas></div>
     </div>
-    <div class="card span-4">
+
+    <div class="card span-6 enlargeable">
       <h4>Temporalité</h4>
-      <canvas id="chTempo" class="chart h220"></canvas>
+      <div class="chart-wrap h220"><canvas id="chTempo" class="chart"></canvas></div>
     </div>
-    <div class="card span-4">
-      <h4>Mode</h4>
-      <canvas id="chMode" class="chart h220"></canvas>
+
+    <!-- ===== Constructeur de requêtes (modulable) ===== -->
+    <div class="card span-12" id="qbCard" style="margin-top:12px">
+      <h4>Constructeur de requêtes</h4>
+
+      <div class="qb-grid"
+          style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+
+        <div>
+          <div class="small muted">Thèmes à inclure</div>
+          <input id="qbThemeInc" type="text" class="picker-input" placeholder="ajouter des thèmes…">
+          <label class="small" style="display:flex;gap:6px;align-items:center;margin-top:6px">
+            <input id="qbIncludeDesc" type="checkbox" checked> Inclure les sous-thèmes
+          </label>
+        </div>
+
+        <div>
+          <div class="small muted">Thèmes à exclure</div>
+          <input id="qbThemeExc" type="text" class="picker-input" placeholder="exclure des thèmes…">
+        </div>
+
+        <div>
+          <div class="small muted">Structures à inclure</div>
+          <input id="qbStructInc" type="text" class="picker-input" placeholder="ajouter des structures…">
+        </div>
+
+        <div>
+          <div class="small muted">Structures à exclure</div>
+          <input id="qbStructExc" type="text" class="picker-input" placeholder="exclure des structures…">
+        </div>
+
+        <div>
+          <div class="small muted">Rôle</div>
+          <select id="qbRole">
+            <option>*</option><option>Expert</option><option>Contributeur</option><option>Utilisateur</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="small muted">Temporalité</div>
+          <select id="qbTemp">
+            <option>*</option><option>Présent</option><option>Passé</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="small muted">Mode</div>
+          <select id="qbMode">
+            <option>*</option><option>AUTO</option><option>MANU</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="small muted">Correspondance (si plusieurs thèmes)</div>
+          <select id="qbMatch">
+            <option value="ANY">ANY (au moins un)</option>
+            <option value="ALL">ALL (tous)</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="qbRun" class="btn">Exécuter</button>
+        <button id="qbCSV" class="btn ghost">Exporter CSV</button>
+      </div>
+
+      <div id="qbOut" class="table-wrap" style="display:none;margin-top:10px">
+        <table class="table" id="qbTable"><thead></thead><tbody></tbody></table>
+      </div>
     </div>
+
+
   </section>
 
-  <script src="js/core.js"></script>
-  <script src="js/chart.js"></script>
-  <script src="js/dashboard.js"></script>
+
+
+
+</main>
+
+<!-- Zoom plein écran Chart.js -->
+<div id="zoomModal" class="zoom-backdrop">
+  <div class="zoom-box">
+    <header>
+      <h3 id="zoomTitle"></h3>
+      <button class="zoom-close" aria-label="Fermer">✕</button>
+    </header>
+    <div class="chart-wrap"><canvas id="zoomCanvas"></canvas></div>
+  </div>
+</div>
+
+<!-- chemins réels -->
+<script src="js/core.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="js/dashboard.js"></script>
+<script>
+  (function () {
+    try {
+      const tok = localStorage.getItem('csr.token');
+      if (!tok) location.href = 'index.html';
+    } catch {}
+  })();
+</script>
+
 </body>
 </html>

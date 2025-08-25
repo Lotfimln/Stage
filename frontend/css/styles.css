@@ -347,9 +347,7 @@ dialog.dlg {
 .span-4 { grid-column: span 4; }
 .span-6 { grid-column: span 6; }
 
-.chart { width:100%; }
-.h220 { height:220px; }
-.h240 { height:240px; }
+
 
 /* Chart.js (thème sombre) */
 :root {
@@ -358,3 +356,141 @@ dialog.dlg {
 }
 
 
+
+/* zoom plein écran */
+.card.zoom.fullscreen {
+  position: fixed;
+  inset: 56px 16px 16px 16px;   /* sous l’en-tête */
+  z-index: 9999;
+  width: auto;
+  height: auto;
+  overflow: hidden;
+}
+
+/* explorateur */
+.explorer { display:flex; gap:8px; align-items:center; margin:8px 0 12px; flex-wrap:wrap; }
+.explorer input {
+  background:#0b1220; border:1px solid #1f2937; color:#e5e7eb;
+  padding:6px 8px; border-radius:8px; min-width:240px;
+}
+.explorer button { padding:6px 10px; border-radius:8px; border:1px solid #1f2937; background:#0f172a; color:#e5e7eb; }
+.explorer button.ghost { background:transparent; color:#93c5fd; border-color:#1f2937; }
+.explorer .muted { color:#94a3b8; font-size:12px; margin-left:6px; }
+
+/* Plein-écran sur click */
+
+
+/* Auto-complétion minimaliste (même style que ta page) */
+.ac-list{
+  position:absolute; z-index:2000; background:#0f172a; border:1px solid #1f2937; border-radius:8px;
+  box-shadow:0 10px 20px rgba(0,0,0,.35); max-height:260px; overflow:auto; width:420px
+}
+.ac-item{ padding:8px 10px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.ac-item:hover{ background:#1f2937 }
+
+/* Ligne explore */
+.explore-row{ display:grid; grid-template-columns: 90px 1fr 70px 1fr auto auto; gap:8px; align-items:center; margin-bottom:10px; }
+.btn{ background:#1e40af; border:none; color:#fff; padding:8px 12px; border-radius:8px; }
+.btn.ghost{ background:transparent; border:1px solid #1f2937; color:#cbd5e1; }
+
+/* Fix: donner une hauteur réelle aux <canvas> utilisés */
+canvas.chart { display:block; width:100% !important; }
+canvas.h220  { height:220px !important; }
+canvas.h260  { height:260px !important; }
+canvas.h300  { height:300px !important; }
+
+/* Évite la boucle de redimensionnement via apparition/disparition scrollbars */
+.card { overflow:hidden; }
+
+/* La grille et ses enfants ne forcent pas de hauteur */
+.layout-dashboard, .dash-grid, .kpis { min-height:0; }
+.dash-grid > .card { min-height:0; }
+
+/* Les spans utilisés par le HTML actuel */
+.span-5 { grid-column: span 5; }
+.span-7 { grid-column: span 7; }
+.span-12 { grid-column: span 12; }
+/* ===== Charts : hauteur bornée (stop page infinie) ===== */
+.chart-wrap{position:relative;width:100%;height:260px;overflow:hidden}
+.chart-wrap.h220{height:220px}
+.chart-wrap.h300{height:300px}
+.chart-wrap > canvas{position:absolute;inset:0;width:100% !important;height:100% !important;display:block}
+
+/* ===== Zoom dans une modale (lisible) ===== */
+.zoom-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.6);
+  display:none; align-items:center; justify-content:center; z-index:9999;
+}
+.zoom-backdrop.open{ display:flex; }
+.zoom-box{
+  background:#0f172a; border:1px solid #1f2937; border-radius:12px;
+  width:min(1200px,92vw); height:min(78vh,800px); padding:12px; position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.zoom-box header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.zoom-box h3{margin:0;font-size:16px;color:#e5e7eb}
+.zoom-close{background:transparent;border:0;color:#94a3b8;font-size:20px;cursor:pointer}
+.zoom-box .chart-wrap{height:calc(100% - 36px);}
+
+/* ===== Explorer : chips + autocomplétion + tableau ===== */
+.explore-row{display:grid;grid-template-columns:90px 1fr 70px 1fr auto auto;gap:8px;align-items:center;margin:8px 0 12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 8px;background:#0b1220;border:1px solid #1f2937;border-radius:8px;min-height:36px}
+.chip{display:inline-flex;gap:6px;align-items:center;background:#1f2937;border-radius:999px;padding:3px 8px;font-size:12px}
+.chip button{background:transparent;border:0;color:#cbd5e1;cursor:pointer;line-height:1}
+
+.ac-list{position:absolute;z-index:2000;background:#0f172a;border:1px solid #1f2937;border-radius:8px;box-shadow:0 10px 20px rgba(0,0,0,.35);max-height:260px;overflow:auto;width:420px}
+.ac-item{padding:8px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-item:hover,.ac-item.active{background:#1f2937}
+
+.btn{background:#1e40af;border:none;color:#fff;padding:8px 12px;border-radius:8px}
+.btn.ghost{background:transparent;border:1px solid #1f2937;color:#cbd5e1}
+
+/* Tableau résultat de l’explorer */
+.table{width:100%;border-collapse:collapse;margin-top:10px}
+.table th,.table td{border-top:1px solid #1f2937;padding:8px 10px}
+.table th{color:#9ca3af;text-align:left;font-weight:600}
+
+/* Sécurité : pas de min-height forcés */
+.layout-dashboard,.dash-grid,.kpis{min-height:0}
+.dash-grid>.card{min-height:0}
+
+/* Modale de zoom : donner une vraie hauteur au canvas */
+#zoomModal .chart-wrap {
+  height: 60vh;                 /* hauteur confortable en plein écran */
+}
+#zoomCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+/* Inputs de l’explorer */
+.picker-input {
+  background: #0b1220;
+  border: 1px solid #24324a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #e5e7eb;
+  min-width: 320px;
+}
+
+/* Dropdown d’autocomplete */
+.ac-list {
+  position: absolute;
+  z-index: 99999;
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  max-height: 240px;
+  overflow: auto;
+}
+.ac-item { padding: 8px 10px; cursor: pointer; }
+.ac-item:hover { background: #111827; }
+
+/* Modale de zoom : donner une vraie hauteur au canvas */
+#zoomModal .chart-wrap { height: 60vh; }
+#zoomCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}

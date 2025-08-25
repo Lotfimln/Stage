@@ -1056,34 +1056,27 @@ def structures_find():
 @require_auth
 def stats_overview():
     sql = """
+    WITH present_pos AS (
+      SELECT p.IDPERS, p.IDTHEME, p.IDSTRUCTURE
+      FROM POSITIONNEMENT p
+      WHERE p.LIBELLETEMPORALITE = 'Présent'
+    )
     SELECT
-      (SELECT COUNT(*) FROM POSITIONNEMENT) AS positions_total,
-      (SELECT COUNT(DISTINCT p.IDPERS)
-         FROM POSITIONNEMENT p
-         WHERE p.LIBELLETEMPORALITE='Présent') AS people_present,
-      (SELECT COUNT(*)
-         FROM PERSONNE per
-         WHERE NOT EXISTS (
-           SELECT 1 FROM POSITIONNEMENT p
-            WHERE p.IDPERS = per.PE_PE_COD#
-              AND p.LIBELLETEMPORALITE='Présent'
-         )) AS people_nonpos_present,
-      (SELECT COUNT(DISTINCT p.IDTHEME)
-         FROM POSITIONNEMENT p
-         WHERE p.LIBELLETEMPORALITE='Présent') AS themes_active_present,
-      (SELECT COUNT(DISTINCT p.IDSTRUCTURE)
-         FROM POSITIONNEMENT p
-         WHERE p.LIBELLETEMPORALITE='Présent' AND p.IDSTRUCTURE IS NOT NULL) AS structures_active_present,
-      (SELECT ROUND(AVG(nb),2) FROM (
-          SELECT COUNT(DISTINCT p.IDTHEME) nb
-          FROM POSITIONNEMENT p
-          WHERE p.LIBELLETEMPORALITE='Présent'
-          GROUP BY p.IDPERS
-      )) AS avg_themes_per_person
+      (SELECT COUNT(DISTINCT IDPERS) FROM present_pos)                 AS people_present,
+      (SELECT COUNT(*) FROM PERSONNE) 
+        - (SELECT COUNT(DISTINCT IDPERS) FROM present_pos)             AS non_positionnes,
+      (SELECT COUNT(DISTINCT IDTHEME) FROM present_pos)                AS themes_active,
+      (SELECT COUNT(DISTINCT IDSTRUCTURE) 
+         FROM present_pos WHERE IDSTRUCTURE IS NOT NULL)               AS structures_active,
+      (SELECT ROUND(AVG(cnt), 2) FROM (
+         SELECT IDPERS, COUNT(DISTINCT IDTHEME) cnt
+         FROM present_pos GROUP BY IDPERS
+      ))                                                               AS themes_per_person
     FROM dual
     """
     row = fetch_one(sql, {})
     return jsonify(row)
+
 
 
 @app.get("/api/stats/top/themes")
@@ -1098,13 +1091,15 @@ def stats_top_themes():
         COUNT(DISTINCT p.IDPERS) AS cnt
       FROM POSITIONNEMENT p
       JOIN THEMES t ON t.CS_TH_COD# = p.IDTHEME
-      WHERE p.LIBELLETEMPORALITE='Présent'
+      WHERE p.LIBELLETEMPORALITE = 'Présent'
       GROUP BY t.CS_TH_COD#, t.THEME
       ORDER BY cnt DESC
-    ) WHERE ROWNUM <= :limit
+    )
+    WHERE ROWNUM <= :limit
     """
     rows = fetch_all(sql, {"limit": limit})
     return jsonify(rows)
+
 
 
 @app.get("/api/stats/top/structures")
@@ -1119,10 +1114,11 @@ def stats_top_structures():
         COUNT(DISTINCT p.IDPERS) AS cnt
       FROM POSITIONNEMENT p
       WHERE p.IDSTRUCTURE IS NOT NULL
-        AND p.LIBELLETEMPORALITE='Présent'
+        AND p.LIBELLETEMPORALITE = 'Présent'
       GROUP BY p.IDSTRUCTURE, COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE))
       ORDER BY cnt DESC
-    ) WHERE ROWNUM <= :limit
+    )
+    WHERE ROWNUM <= :limit
     """
     rows = fetch_all(sql, {"limit": limit})
     return jsonify(rows)
@@ -1130,36 +1126,90 @@ def stats_top_structures():
 
 
 
+
+
 @app.get("/api/stats/distribution")
 @require_auth
 def stats_distribution():
+    # Rôles (sur les personnes Présentes)
     sql_role = """
-      SELECT NVL(LIBCONTRIBUTION,'(N/A)') AS label, COUNT(DISTINCT IDPERS) AS cnt
+      SELECT NVL(LIBCONTRIBUTION,'(N/A)') AS label,
+             COUNT(DISTINCT IDPERS) AS cnt
       FROM POSITIONNEMENT
-      WHERE LIBELLETEMPORALITE='Présent'
+      WHERE LIBELLETEMPORALITE = 'Présent'
       GROUP BY NVL(LIBCONTRIBUTION,'(N/A)')
       ORDER BY cnt DESC
     """
+
+    # Temporalité (Présent vs Passé) – distinct personnes
     sql_temp = """
-      SELECT NVL(LIBELLETEMPORALITE,'(N/A)') AS label, COUNT(*) AS cnt
+      SELECT NVL(LIBELLETEMPORALITE,'(N/A)') AS label,
+             COUNT(DISTINCT IDPERS) AS cnt
       FROM POSITIONNEMENT
       GROUP BY NVL(LIBELLETEMPORALITE,'(N/A)')
       ORDER BY cnt DESC
     """
-    sql_mode = """
-      SELECT
-        SUM(CASE WHEN AUTO_GENERE = '0' AND LIBELLETEMPORALITE='Présent' THEN 1 ELSE 0 END) AS auto_cnt,
-        SUM(CASE WHEN (AUTO_GENERE IS NULL OR AUTO_GENERE <> '0') AND LIBELLETEMPORALITE='Présent' THEN 1 ELSE 0 END) AS manu_cnt
-      FROM POSITIONNEMENT
-    """
+
     role = fetch_all(sql_role, {})
     temp = fetch_all(sql_temp, {})
-    mode = fetch_one(sql_mode, {})
-    mode_rows = [
-        {"label": "AUTO", "cnt": int(mode.get("AUTO_CNT", 0) if isinstance(mode, dict) else mode[0])},
-        {"label": "MANU", "cnt": int(mode.get("MANU_CNT", 0) if isinstance(mode, dict) else mode[1])},
-    ]
-    return jsonify({"role": role, "temporalite": temp, "mode": mode_rows})
+    return jsonify({"role": role, "temporalite": temp})
+
+@app.get("/api/stats/people_count")
+@require_auth
+def people_count():
+    sid = request.args.get("structure_id", type=int)
+    tid = request.args.get("theme_id", type=int)
+    limit = int(request.args.get("limit", 15))
+
+    # structure + thème => un chiffre
+    if sid and tid:
+        sql = """
+          SELECT COUNT(DISTINCT p.IDPERS) AS cnt
+          FROM POSITIONNEMENT p
+          WHERE p.LIBELLETEMPORALITE = 'Présent'
+            AND p.IDSTRUCTURE = :sid
+            AND p.IDTHEME = :tid
+        """
+        row = fetch_one(sql, {"sid": sid, "tid": tid})
+        return jsonify({"count": int(row.get("CNT", 0))})
+
+    # seulement structure => repartition par thèmes
+    if sid and not tid:
+        sql = """
+        SELECT * FROM (
+          SELECT t.CS_TH_COD# AS id,
+                 t.THEME      AS label,
+                 COUNT(DISTINCT p.IDPERS) AS cnt
+          FROM POSITIONNEMENT p
+          JOIN THEMES t ON t.CS_TH_COD# = p.IDTHEME
+          WHERE p.LIBELLETEMPORALITE = 'Présent'
+            AND p.IDSTRUCTURE = :sid
+          GROUP BY t.CS_TH_COD#, t.THEME
+          ORDER BY cnt DESC
+        ) WHERE ROWNUM <= :limit
+        """
+        rows = fetch_all(sql, {"sid": sid, "limit": limit})
+        return jsonify({"by": "theme", "rows": rows})
+
+    # seulement thème => repartition par structures
+    if tid and not sid:
+        sql = """
+        SELECT * FROM (
+          SELECT p.IDSTRUCTURE AS id,
+                 COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE)) AS label,
+                 COUNT(DISTINCT p.IDPERS) AS cnt
+          FROM POSITIONNEMENT p
+          WHERE p.LIBELLETEMPORALITE = 'Présent'
+            AND p.IDTHEME = :tid
+            AND p.IDSTRUCTURE IS NOT NULL
+          GROUP BY p.IDSTRUCTURE, COALESCE(p.LIBELLESTRUCTURE, TO_CHAR(p.IDSTRUCTURE))
+          ORDER BY cnt DESC
+        ) WHERE ROWNUM <= :limit
+        """
+        rows = fetch_all(sql, {"tid": tid, "limit": limit})
+        return jsonify({"by": "structure", "rows": rows})
+
+    abort(400, description="Provide structure_id and/or theme_id")
 
 
 if __name__ == "__main__":
