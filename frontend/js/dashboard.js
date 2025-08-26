@@ -29,7 +29,6 @@ const zoom = (() => {
   function destroy() { if (zchart) { try { zchart.destroy(); } catch {} zchart = null; } }
 
   function buildConfig(srcChart) {
-    // Clone minimal config (type + plain data only)
     return {
       type: srcChart.config.type,
       data: {
@@ -47,7 +46,6 @@ const zoom = (() => {
     const wrap = modal?.querySelector(".chart-wrap");
     if (!wrap) return;
     const r = wrap.getBoundingClientRect();
-    // set explicit px size so Chart.js doesn't get 0x0
     canvas.style.width  = r.width + "px";
     canvas.style.height = r.height + "px";
     canvas.width  = Math.max(1, Math.floor(r.width));
@@ -61,7 +59,6 @@ const zoom = (() => {
 
     modal.classList.add("open");
 
-    // wait for layout to apply (.open may animate)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         sizeCanvas();
@@ -94,7 +91,7 @@ function enableZoom(canvas, chart, title = "") {
   async function loadKPIs(){
     try{
       const o = await api("/api/stats/overview");
-      // tolérant aux champs (back peut varier)
+      // tolérant aux champs
       const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent = (v ?? "—"); };
       const peopleTotal   = o.people_present ?? (typeof o.people_total==="number" && typeof o.non_positionnes==="number" ? o.people_total - o.non_positionnes : o.people_total);
       set("kpiPeople",  peopleTotal);
@@ -102,7 +99,7 @@ function enableZoom(canvas, chart, title = "") {
       set("kpiThemes",  o.themes_total    ?? o.themes_active ?? "—");
       set("kpiStructs", o.structures_total?? o.structures_active ?? "—");
       set("kpiAvg",     o.avg_themes_per_person ?? o.themes_per_person ?? "—");
-    }catch(e){ /* silencieux (pas de token → pas de crash) */ }
+    }catch(e){}
   }
 
   // ========== Top charts ==========
@@ -143,7 +140,7 @@ function enableZoom(canvas, chart, title = "") {
         charts.topStructs = chart;
         enableZoom(c2.canvas, chart, "Top structures");
       }
-    }catch(e){ /* silencieux */ }
+    }catch(e){}
   }
   async function initModQueries(){
   const sel = document.getElementById('qrySelect');
@@ -432,7 +429,7 @@ function enableZoom(canvas, chart, title = "") {
       render();
     }
     input.addEventListener("focus", ()=>query(""));                    // pré-remplir
-    input.addEventListener("input", (e)=>query(e.target.value.trim())); // affiner
+    input.addEventListener("input", (e)=>query(e.target.value.trim())); //affinage
     input.addEventListener("blur",  ()=>setTimeout(closeList,120));
     input.addEventListener("keydown",(e)=>{ if (e.key==="Escape") closeList(); });
   }
@@ -452,7 +449,7 @@ function enableZoom(canvas, chart, title = "") {
   );
 
 
-  // ========== Explorer (bar horizontale)
+  // ========== Explorer 
   let exploreChart = null;
 
   function drawExplore(labels, values){
@@ -489,7 +486,7 @@ function enableZoom(canvas, chart, title = "") {
     }
 
     // Agrège DISTINCT par structure (filtre si une structure est sélectionnée)
-    const byStruct = new Map(); // label -> Set(idpers)
+    const byStruct = new Map(); // 
     (rows||[]).forEach(r=>{
       const sid   = r.IDSTRUCTURE ?? r.idstructure ?? null;
       const sName = r.LIBELLESTRUCTURE ?? r.libellestructure ?? String(sid ?? "(N/A)");
@@ -510,7 +507,7 @@ function enableZoom(canvas, chart, title = "") {
     $("#acTheme").value=""; $("#acStruct").value="";
     if (exploreChart){ exploreChart.destroy(); exploreChart=null; }
   });
-  // --- utils souples (clés variables) ---
+  // --- utils souples  ---
     const pick = (r, ...names) => { for (const n of names) if (r?.[n] !== undefined) return r[n]; };
 
     // ===================== QUERY BUILDER =====================
