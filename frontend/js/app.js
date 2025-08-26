@@ -5,8 +5,8 @@
   // --- état local
   let selectedThemeId = null;
   let selectedThemeLabel = null;
-  let lastSearchBody = null;   // mémorise la dernière recherche personnes
-
+  let lastSearchBody = null;
+  
   // ---------- Boot ----------
   document.addEventListener('DOMContentLoaded', () => {
     const bu = $('baseUrl') || $('loginBaseUrl');
@@ -76,11 +76,11 @@
         $('token') && ($('token').value = tok);
         $('baseUrl') && ($('baseUrl').value = state.baseUrl);
 
-        setStatus('✅ Connecté', 'ok');
+        setStatus(' Connecté', 'ok');
         updateAuthUI();
         if (window.reloadCSRQueries) window.reloadCSRQueries();
       } catch (e) {
-        setStatus('❌ ' + (e?.message || e), 'err');
+        setStatus((e?.message || e), 'err');
         showView('login');
       }
     });
@@ -103,7 +103,7 @@
       save.onclick = () => {
         setBaseUrl(($('baseUrl')?.value) || '');
         setToken(($('token')?.value || '').trim());
-        setStatus('✅ Paramètres enregistrés', 'ok');
+        setStatus('Paramètres enregistrés', 'ok');
         updateAuthUI();
       };
     }
@@ -113,9 +113,9 @@
       check.onclick = async () => {
         try {
           const r = await api('/api/health');
-          setStatus('✅ API OK: ' + JSON.stringify(r), 'ok');
+          setStatus('API OK: ' + JSON.stringify(r), 'ok');
         } catch (e) {
-          setStatus('❌ ' + e.message, 'err');
+          setStatus(e.message, 'err');
           if (String(e.message).includes('401')) { logout(); updateAuthUI(); }
         }
       };
@@ -133,9 +133,9 @@
           state.flat = rows;
           state.tree = buildTree(rows);
           renderTree(state.tree);
-          setStatus(`✅ ${rows.length} lignes reçues, arbre construit.`, 'ok');
+          setStatus(' ${rows.length} lignes reçues, arbre construit.`, 'ok');
         } catch (e) {
-          setStatus('❌ ' + e.message, 'err');
+          setStatus(e.message, 'err');
         }
       };
     }
@@ -237,9 +237,9 @@
           });
 
           renderPeople(rows);
-          setStatus(`✅ ${rows.length} résultat(s) pour « ${selectedThemeLabel} »`, 'ok');
+          setStatus(`${rows.length} résultat(s) pour « ${selectedThemeLabel} »`, 'ok');
         } catch (e) {
-          setStatus('❌ ' + e.message, 'err');
+          setStatus(e.message, 'err');
         }
       };
     }
@@ -252,9 +252,9 @@
           // NB: on ne mémorise pas cette "recherche" dans lastSearchBody
           const data = await api('/api/stats/non_positionnes');
           renderPeople(data.people || []);
-          setStatus(`✅ ${data.total} personne(s) sans positionnement`, 'ok');
+          setStatus(`${data.total} personne(s) sans positionnement`, 'ok');
         } catch (e) {
-          setStatus('❌ ' + e.message, 'err');
+          setStatus(e.message, 'err');
         }
       };
     }
@@ -329,9 +329,9 @@ function renderPeople(rows) {
         } else {
           tr.remove();
         }
-        setStatus('✅ Positionnement supprimé', 'ok');
+        setStatus(' Positionnement supprimé', 'ok');
       } catch (e) {
-        setStatus('❌ ' + (e?.message || e), 'err');
+        setStatus((e?.message || e), 'err');
       }
     };
     actions.appendChild(btnDel);
@@ -458,7 +458,7 @@ function bindAddPosForm() {
 
         await api('/api/positions', { method: 'POST', body: JSON.stringify(body) });
 
-        setApStatus('✅ Positionnement enregistré', 'ok');
+        setApStatus(' Positionnement enregistré', 'ok');
 
         // rafraîchir la dernière recherche si dispo
         if (lastSearchBody) {
@@ -471,7 +471,7 @@ function bindAddPosForm() {
 
         setTimeout(() => dlg.close(), 400);
     } catch (err) {
-        setApStatus('❌ ' + (err?.message || err), 'err');
+        setApStatus((err?.message || err), 'err');
     }
     });
 
@@ -902,9 +902,9 @@ async function bindCSRQueries() {
         body: JSON.stringify(body)
       });
       renderCSRTable(rows);
-      setStatus(`✅ ${Array.isArray(rows) ? rows.length : 0} ligne(s)`, 'ok');
+      setStatus(` ${Array.isArray(rows) ? rows.length : 0} ligne(s)`, 'ok');
     } catch (e) {
-      setStatus('❌ ' + (e?.message || e), 'err');
+      setStatus((e?.message || e), 'err');
     }
   };
 }
@@ -1401,3 +1401,4 @@ async function fetchThemesSmart(q) {
 }
 
 })();
+
