@@ -29,7 +29,7 @@ FRONT_ORIGIN = os.getenv('FRONT_ORIGIN', 'http://localhost:3000')
 TOKEN_TTL_MIN = int(os.getenv('TOKEN_TTL_MIN', '60'))
 
 
-# 2) CORS bien configuré pour le front + header Authorization
+# 2) CORS configuré pour le front + header Authorization
 CORS(app, resources={r"/api/*": {"origins": "*"}},
      expose_headers=["Authorization"],
      supports_credentials=False)
@@ -46,7 +46,6 @@ def make_token(username: str) -> str:
 def require_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # Laisser passer les preflights de CORS
         if request.method == 'OPTIONS':
             return ('', 204)
 
@@ -117,7 +116,7 @@ def people_search():
     if not ids:
         return jsonify([])
 
-    # On construit la clause pour la liste d’IDs (binds nommés)
+    # On construit la clause pour la liste d’IDs
     ids_bind_names = []
     binds = {
         'include_desc': include_desc,
@@ -246,7 +245,7 @@ def delete_position():
         'libtemp': body['libtemp'],
     }
 
-    # Important: ne supprime QUE les positionnements MANU (non AUTO)
+    # Ne supprime que les positionnements MANU 
     sql = """
       DELETE FROM POSITIONNEMENT
       WHERE IDPERS = :idpers
@@ -263,7 +262,7 @@ def delete_position():
 def people_find():
     q = (request.args.get("q") or "").strip().lower()
 
-    # 1) Sans saisie -> petite liste par défaut
+    # 1) Sans saisie 
     if len(q) == 0:
         sql = """
         SELECT * FROM (
@@ -309,7 +308,7 @@ def people_find():
 def themes_find():
     q = (request.args.get("q") or "").strip().lower()
 
-    # 0) Sans saisie -> petite liste de départ
+    # 0) Sans saisie 
     if len(q) == 0:
         sql = """
         SELECT * FROM (
@@ -324,7 +323,7 @@ def themes_find():
         rows = fetch_all(sql, {})
         return jsonify(rows)
 
-    # 1) Avec saisie (filtre nom) — limite 25
+    # 1) Avec saisie 
     sql = """
     SELECT * FROM (
       SELECT
@@ -393,7 +392,6 @@ def _to_bool(v):
     if v is None: return False
     return str(v).lower() in ("1", "true", "yes", "y", "on")
 
-# Registre: id -> {label, params:{name:type}, sql_builder(body)->(sql, binds)}
 CSR_QUERIES = {}
 
 def register_query(qid, label, params, sql_builder):
@@ -527,7 +525,7 @@ def _q_people_by_themes_with_exclusion(body):
     in_sql = _themes_set_sql(in_names, inc_desc)
 
     # exclusion
-    out_sql = "NOT IN (SELECT 0 FROM dual)"  # neutre si liste vide
+    out_sql = "NOT IN (SELECT 0 FROM dual)"  #neutre si l vide
     if ids_exc:
         out_names = _bind_ids("ex", ids_exc, binds)
         out_sql = _themes_set_sql(out_names, inc_desc)
@@ -921,7 +919,7 @@ def _q_subthemes_of_X_in_S(body):
         sn = _bind_ids("s", structs, binds)
         sfilter = f" AND p.IDSTRUCTURE IN ({', '.join(sn)})"
 
-    # Ensemble des sous-thèmes du root (descendants directs/indirects, root exclu)
+    # Ensemble des sous-thèmes du theme racine (descendants directs/indirects, root exclu)
     sub_sql = """
       SELECT cs_th_cod# FROM THEMES
       START WITH theme_parent = :rt
@@ -1214,4 +1212,5 @@ def people_count():
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5000)
+
 
