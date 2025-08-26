@@ -2,7 +2,6 @@ import os
 import oracledb
 from contextlib import contextmanager
 
-# -- Active le mode THICK et pointe vers le bon Instant Client
 oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_21_13\instantclient_19_28")
 
 DSN  = os.getenv('ORA_DSN', '127.0.0.1:1521/xe')
@@ -10,7 +9,6 @@ USER = os.getenv('ORA_USER')
 PWD  = os.getenv('ORA_PASSWORD')
 
 def get_conn():
-    # en mode THICK, pas besoin de "thin=True"
     return oracledb.connect(user=USER, password=PWD, dsn=DSN)
 
 @contextmanager
@@ -42,4 +40,5 @@ def fetch_one(sql, binds):
 def execute(sql, binds):
     with cursor() as cur:
         cur.execute(sql, binds)
+
     
