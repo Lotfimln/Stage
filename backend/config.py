@@ -13,5 +13,5 @@ class Config:
 
     @property
     def dsn(self) -> str:
-        # thin driver DSN: host:port/service_name
         return f"{self.ORA_HOST}:{self.ORA_PORT}/{self.ORA_SERVICE}"
+
