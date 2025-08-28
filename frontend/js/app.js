@@ -133,7 +133,7 @@
           state.flat = rows;
           state.tree = buildTree(rows);
           renderTree(state.tree);
-          setStatus(' ${rows.length} lignes reçues, arbre construit.`, 'ok');
+          setStatus(' ${rows.length} lignes reçues, arbre construit.', 'ok');
         } catch (e) {
           setStatus(e.message, 'err');
         }
