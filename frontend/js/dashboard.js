@@ -630,6 +630,8 @@ function enableZoom(canvas, chart, title = "") {
       loadKPIs().catch(()=>{});
       loadTopCharts().catch(()=>{});
       loadDistribution().catch(()=>{});
+      initQueryBuilder();
+
     }
 
     // Au chargement: uniquement si déjà connecté
