@@ -46,6 +46,9 @@
     else localStorage.removeItem('csr.token');
     const tokenInput = $('token');
     if (tokenInput) tokenInput.value = state.token;
+    const authed = !!state.token;
+    window.dispatchEvent(new CustomEvent('csr:auth', { detail: { authed, token: state.token }}));
+
   }
 
   function setUser(u) {

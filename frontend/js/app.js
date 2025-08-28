@@ -22,7 +22,6 @@
     setupAutocomplete();
     bindCSRQueries();
     updateAuthUI();
-    bindDashboard();
 });
 
 
@@ -118,6 +117,13 @@
           setStatus(e.message, 'err');
           if (String(e.message).includes('401')) { logout(); updateAuthUI(); }
         }
+      };
+    }
+    const dash = $('dashboardBtn');
+    if (dash) {
+      dash.onclick = () => {
+        // redirection vers la page dashboard
+        window.location.href = "dashboard.html";
       };
     }
   }
@@ -1132,8 +1138,8 @@ function attachPicker(input, { mode = 'single', fetcher, toItem = (row)=>row, mi
 
 
 
-    // nettoyage sur unload
-    window.addEventListener('unload', () => list.remove());
+    // nettoyage sur sortie de page
+    window.addEventListener('pagehide', () => { try { list.remove(); } catch {} }, { once: true });
 
     const sel = []; // [{id,label}]
     const redrawChips = () => {

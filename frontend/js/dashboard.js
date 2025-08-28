@@ -624,11 +624,22 @@ function enableZoom(canvas, chart, title = "") {
 
 
   // ========== Init ==========
-  document.addEventListener("DOMContentLoaded", async ()=>{
-    // Si pas de token en localStorage → ne bloque pas l’UI, mais les cartes resteront "—"
-    try { await loadKPIs(); }          catch{}
-    try { await loadTopCharts(); }     catch{}
-    try { await loadDistribution(); }  catch{}
-    try { await initQueryBuilder(); }    catch{}  
-  });
+    function bootDashboardOnce() {
+      if (bootDashboardOnce._did) return;
+      bootDashboardOnce._did = true;
+      loadKPIs().catch(()=>{});
+      loadTopCharts().catch(()=>{});
+      loadDistribution().catch(()=>{});
+    }
+
+    // Au chargement: uniquement si déjà connecté
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.core?.state?.token) bootDashboardOnce();
+    });
+
+    // Après un login: booter le dashboard
+    window.addEventListener('csr:auth', (e) => {
+      if (e.detail?.authed) bootDashboardOnce();
+    });
+
 })();
