@@ -560,16 +560,6 @@ function enableZoom(canvas, chart, title = "") {
       });
     } catch { rows = []; }
 
-    // Fallback: si personne choisie + 0 résultat, retente "id seul"
-    if ((!rows || !rows.length) && personId) {
-      try {
-        rows = await window.core.api('/api/people/search', {
-          method: 'POST',
-          body: JSON.stringify({ idpers: Number(personId) })
-        });
-      } catch {}
-    }
-
     // filtres côté client (inchangés)
     if (structInc.length > 1) {
       const keep = new Set(structInc.map(Number));
@@ -642,6 +632,12 @@ function enableZoom(canvas, chart, title = "") {
     // Après un login: booter le dashboard
     window.addEventListener('csr:auth', (e) => {
       if (e.detail?.authed) bootDashboardOnce();
+    });
+
+    document.addEventListener('click', (e) => {
+      const id = e.target?.id;
+      if (id === 'qbRun') { e.preventDefault(); try { runQB(); } catch(err) { console.error(err); } }
+      if (id === 'qbCSV') { e.preventDefault(); try { exportQB(); } catch(err) { console.error(err); } }
     });
 
 })();
