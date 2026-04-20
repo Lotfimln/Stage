@@ -4,7 +4,7 @@ Application web pour explorer les **positionnements de chercheurs** sur des thé
 
 ---
 
-## Fonctionnalités
+## Fonctionnalités 
 
 ### Exploration & Recherche
 - **Arbre thématique** hiérarchique (563 thèmes, CTEs récursives)
