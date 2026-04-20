@@ -6,6 +6,7 @@
     baseUrl: localStorage.getItem('csr.baseUrl') || 'http://127.0.0.1:5000',
     token:    localStorage.getItem('csr.token')  || '',
     user:     localStorage.getItem('csr.user')   || null,
+    role:     localStorage.getItem('csr.role')   || null,
     flat: [],
     tree: []
   };
@@ -42,12 +43,23 @@
 
   function setToken(t) {
     state.token = t || '';
-    if (state.token) localStorage.setItem('csr.token', state.token);
-    else localStorage.removeItem('csr.token');
+    if (state.token) {
+      localStorage.setItem('csr.token', state.token);
+      // Decode JWT payload to extract role
+      try {
+        const payload = JSON.parse(atob(state.token.split('.')[1]));
+        state.role = payload.role || 'admin';
+      } catch (_) { state.role = 'admin'; }
+      localStorage.setItem('csr.role', state.role);
+    } else {
+      localStorage.removeItem('csr.token');
+      state.role = null;
+      localStorage.removeItem('csr.role');
+    }
     const tokenInput = $('token');
     if (tokenInput) tokenInput.value = state.token;
     const authed = !!state.token;
-    window.dispatchEvent(new CustomEvent('csr:auth', { detail: { authed, token: state.token }}));
+    window.dispatchEvent(new CustomEvent('csr:auth', { detail: { authed, token: state.token, role: state.role }}));
 
   }
 
@@ -94,7 +106,13 @@
   function logout() {
     setToken('');
     setUser(null);
+    state.role = null;
+    localStorage.removeItem('csr.role');
     showView('login');
+  }
+
+  function isAdmin() {
+    return state.role === 'admin';
   }
 
   // --------- Arbre des thèmes ---------
@@ -172,7 +190,7 @@
   window.core = {
     $, state,
     setBaseUrl, setToken, setUser,
-    api, login, logout,
+    api, login, logout, isAdmin,
     showView, setStatus,
     buildTree, renderTree, renderNodes, showDetails,
     escapeHtml

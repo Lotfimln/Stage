@@ -1,79 +1,111 @@
 <!doctype html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prototype CSR – IRIT</title>
+  <title>CSR IRIT — Cartographie Scientifique</title>
+  <meta name="description"
+    content="Prototype de cartographie scientifique de l'IRIT — exploration thématique, positionnement des chercheurs, requêtes CSR." />
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
+
 <body>
 
-  <!-- ===== Vue Connexion ===== -->
-  <div id="view-login" data-view="login" class="center">
+  <!-- ===== LOGIN VIEW ===== -->
+  <div id="view-login" data-view="login" class="login-view">
     <form id="loginForm" class="card login-card" autocomplete="off">
-      <h2 style="margin:0 0 12px">Connexion</h2>
+      <div class="logo-large">
+        <span class="accent">CSR</span> IRIT
+      </div>
+      <div class="login-subtitle">Cartographie Scientifique — Prototype</div>
 
-      <div class="small muted" style="margin-bottom:6px">API base :</div>
-      <input id="loginBaseUrl" type="text" placeholder="http://127.0.0.1:5000" />
+      <div class="form-group">
+        <span class="form-label">Serveur API</span>
+        <input id="loginBaseUrl" type="text" placeholder="http://127.0.0.1:5000" />
+      </div>
 
-      <div class="small muted" style="margin:14px 0 6px">Utilisateur :</div>
-      <input id="loginUser" type="text" placeholder="lotfi" />
+      <div class="form-group">
+        <span class="form-label">Identifiant</span>
+        <input id="loginUser" type="text" placeholder="Votre nom d'utilisateur" />
+      </div>
 
-      <div class="small muted" style="margin:14px 0 6px">Mot de passe :</div>
-      <input id="loginPass" type="password" placeholder="admin" />
+      <div class="form-group">
+        <span class="form-label">Mot de passe</span>
+        <input id="loginPass" type="password" placeholder="••••••" />
+      </div>
 
-      <button class="primary" type="submit" style="width:100%; margin-top:16px">Se connecter</button>
+      <button class="btn-primary" type="submit"
+        style="width:100%; margin-top:var(--space-lg); padding:var(--space-md);">
+        Se connecter
+      </button>
 
-      <div id="status" class="muted" style="margin-top:10px">Prêt.</div>
+      <button id="btnGuest" type="button" class="btn-ghost"
+        style="width:100%; margin-top:var(--space-sm); padding:var(--space-md); opacity:.85;">
+        Continuer en tant qu'invité
+      </button>
+
+      <div id="status" class="status-msg mt-md">Prêt.</div>
     </form>
   </div>
 
-  <!-- ===== Vue Application ===== -->
+  <!-- ===== APPLICATION VIEW ===== -->
   <div id="view-app" data-view="app" style="display:none">
-    <header>
-      <h1>Prototype CSR – Front</h1>
-      <div class="row">
-        <label class="small muted">API base&nbsp;:</label>
-        <input id="baseUrl" type="text" placeholder="http://127.0.0.1:5000" />
-        <label class="small muted">JWT&nbsp;:</label>
-        <input id="token" type="text" placeholder="Colle ton token ici (Bearer …)" />
-        <button id="check">Ping /api/health</button>
-        <span id="whoami" class="small muted" style="margin-left:8px"></span>
-        <button id="logoutBtn" style="margin-left:auto">Se déconnecter</button>
-        <button id="save" class="primary">Enregistrer</button>
-        <button id="dashboardBtn" class="primary">Dashboard</button>
-      </div>
-    </header>
 
-    <main class="layout">
-      <!-- Colonne gauche -->
-      <div class="col-left">
-        <!-- Thèmes -->
+    <!-- Topbar -->
+    <nav class="topbar">
+      <div class="logo">
+        <span class="logo-accent">CSR</span> IRIT
+      </div>
+      <div class="spacer"></div>
+      <span id="whoami" class="user-badge">
+        <span class="dot"></span>
+        <span>—</span>
+      </span>
+      <button id="dashboardBtn" class="btn-primary btn-sm">Dashboard</button>
+      <button id="logoutBtn" class="btn-ghost btn-sm">Déconnexion</button>
+    </nav>
+
+    <!-- Hidden fields for API config -->
+    <input id="baseUrl" type="hidden" />
+    <input id="token" type="hidden" />
+    <button id="check" style="display:none"></button>
+    <button id="save" style="display:none"></button>
+
+    <!-- Main layout -->
+    <div class="app-layout">
+      <!-- SIDEBAR: Themes + Details -->
+      <aside class="sidebar">
         <section class="card">
-          <h3 style="margin:6px 0 8px">Thèmes</h3>
-          <div class="toolbar">
-            <button id="loadTree" class="primary">Charger l’arbre</button>
-            <button id="expandAll">Tout ouvrir</button>
-            <button id="collapseAll">Tout fermer</button>
+          <div class="card-header">
+            <h3>Thèmes</h3>
+            <div class="toolbar">
+              <button id="loadTree" class="btn-primary btn-sm">Charger</button>
+              <button id="expandAll" class="btn-sm">Ouvrir</button>
+              <button id="collapseAll" class="btn-sm">Fermer</button>
+            </div>
           </div>
-          <div id="status" class="muted" style="margin-top:8px">Prêt.</div>
-          <div id="tree" style="margin-top:10px"></div>
+          <div id="status" class="status-msg">Prêt.</div>
+          <div id="tree" class="tree-container mt-sm"></div>
         </section>
 
-        <!-- Détails -->
         <section class="card">
-          <h3 style="margin:6px 0 8px">Détails</h3>
-          <div id="details" class="muted">Sélectionne un nœud pour voir ses infos.</div>
+          <h3 style="margin-bottom:var(--space-md)">Détails</h3>
+          <div id="details" class="details-panel muted" style="font-size:var(--font-size-sm)">
+            Sélectionnez un thème pour voir ses informations.
+          </div>
         </section>
-      </div>
+      </aside>
 
-      <!-- Colonne droite -->
-      <div class="col-right">
-        <section class="card people">
-          <h3 style="margin:6px 0 8px">Recherche personnes</h3>
+      <!-- MAIN: Search + CSR Queries -->
+      <div class="main-content">
+        <section class="card">
+          <div class="card-header">
+            <h3>Recherche personnes</h3>
+          </div>
 
-          <div class="row" style="margin:12px 0; flex-wrap:wrap; gap:8px">
-            <label><input id="chkIncludeDesc" type="checkbox" checked> Inclure descendants</label>
+          <div class="filters-bar mb-md">
+            <label><input id="chkIncludeDesc" type="checkbox" checked> Descendants</label>
 
             <select id="selRole">
               <option value="*">Rôle : (tous)</option>
@@ -93,18 +125,20 @@
               <option value="AUTO">AUTO</option>
               <option value="MANU">MANU</option>
             </select>
+          </div>
 
-            <button id="btnSearch" class="primary">Rechercher (thème sélectionné)</button>
+          <div class="toolbar mb-md">
+            <button id="btnSearch" class="btn-primary">Rechercher (thème sélectionné)</button>
             <button id="btnNonPos">Non positionnés</button>
-
-            <button id="btnOpenAdd" class="primary">Ajouter un positionnement</button>
+            <button id="btnOpenAdd">Ajouter un positionnement</button>
           </div>
 
           <div class="table-wrap">
             <table id="peopleTbl">
               <thead>
                 <tr>
-                  <th>Nom</th><th>Prénom</th>
+                  <th>Nom</th>
+                  <th>Prénom</th>
                   <th>Thème</th>
                   <th>Rôle</th>
                   <th>Temp.</th>
@@ -116,90 +150,91 @@
             </table>
           </div>
         </section>
+
+        <!-- CSR Queries -->
+        <section class="card">
+          <div class="card-header">
+            <h3>Requêtes CSR</h3>
+          </div>
+          <div class="row gap-md" style="flex-wrap:wrap">
+            <select id="csrSelect" style="min-width:280px; flex:1"></select>
+            <span class="small muted">Paramètres :</span>
+            <div id="csrParams" class="row" style="gap:var(--space-sm); flex-wrap:wrap"></div>
+            <button id="csrRun" class="btn-primary">Exécuter</button>
+          </div>
+          <div id="csrOut" class="table-wrap mt-md"></div>
+        </section>
       </div>
-    </main>
+    </div>
   </div>
 
-  <!-- autocomplétion personne + thème -->
+  <!-- ===== DIALOG: Add Position ===== -->
   <dialog id="dlgAddPos">
-    <form method="dialog" id="formAddPos" class="card" style="min-width:520px">
-      <h3 style="margin:0 0 12px">Ajouter un positionnement</h3>
+    <form method="dialog" id="formAddPos" style="min-width:500px">
+      <h3 style="margin-bottom:var(--space-xl)">Ajouter un positionnement</h3>
 
-    <!-- Personne -->
-    <div class="small muted">Personne</div>
-    <!-- champ libre avec datalist -->
-    <input id="ap_person" list="dlPersons" type="text" placeholder="Tape un nom (optionnel)">
-    <datalist id="dlPersons"></datalist>
-    <input type="hidden" id="ap_idpers">
-    <div id="ap_person_label" class="small muted" style="margin:6px 0 10px"></div>
+      <div class="form-group mb-md">
+        <span class="form-label">Personne</span>
+        <input id="ap_person" type="text" placeholder="Tapez un nom…">
+        <input type="hidden" id="ap_idpers">
+        <div id="ap_person_label" class="small muted mt-sm"></div>
+      </div>
 
-    <!-- Thème -->
-    <div class="small muted">Thème</div>
-    <!-- champ libre avec datalist -->
-    <input id="ap_theme" list="dlThemes" type="text" placeholder="Tape un thème (optionnel)" style="margin-bottom:8px">
-    <datalist id="dlThemes"></datalist>
+      <div class="form-group mb-md">
+        <span class="form-label">Thème</span>
+        <input id="ap_theme" type="text" placeholder="Tapez un thème…" style="margin-bottom:var(--space-sm)">
+        <div class="row gap-md">
+          <input id="ap_idtheme" type="number" placeholder="ID thème" style="width:140px">
+          <input id="ap_libtheme" type="text" placeholder="Libellé (auto)" disabled style="flex:1; opacity:.7">
+        </div>
+      </div>
 
-    <div class="row" style="gap:8px; margin-bottom:8px">
-    <input id="ap_idtheme" type="number" placeholder="ID thème" style="width:160px">
-    <input id="ap_libtheme" type="text" placeholder="Libellé (auto)" disabled style="flex:1; opacity:.8">
-    </div>
-      <!-- Rôle / Temporalité -->
-      <div class="row" style="gap:8px; margin:8px 0">
-        <label>Rôle :
+      <div class="row gap-md mb-md">
+        <div class="form-group" style="flex:1">
+          <span class="form-label">Rôle</span>
           <select id="ap_libcontr">
             <option>Contributeur</option>
             <option>Expert</option>
             <option>Utilisateur</option>
           </select>
-        </label>
-        <label>Temporalité :
+        </div>
+        <div class="form-group" style="flex:1">
+          <span class="form-label">Temporalité</span>
           <select id="ap_libtemp">
             <option>Présent</option>
             <option>Passé</option>
           </select>
-        </label>
+        </div>
       </div>
 
-      <!-- Structure -->
-      <details style="margin:8px 0">
-        <summary class="small muted">Structure (optionnel)</summary>
-        <div class="row" style="gap:8px; margin-top:8px">
-          <input id="ap_idstruct" type="number" placeholder="ID structure" style="width:160px">
+      <details style="margin-bottom:var(--space-lg)">
+        <summary class="small muted" style="cursor:pointer">Structure (optionnel)</summary>
+        <div class="row gap-md mt-sm">
+          <input id="ap_idstruct" type="number" placeholder="ID structure" style="width:140px">
           <input id="ap_libstruct" type="text" placeholder="Libellé structure" style="flex:1">
         </div>
-        <div class="row" style="gap:8px; margin-top:8px">
-          <input id="ap_idtypestruct" type="number" placeholder="ID type struct." style="width:160px">
+        <div class="row gap-md mt-sm">
+          <input id="ap_idtypestruct" type="number" placeholder="ID type struct." style="width:140px">
           <input id="ap_libtypestruct" type="text" placeholder="Libellé type struct." style="flex:1">
         </div>
       </details>
 
-      <menu style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px">
+      <div style="display:flex; justify-content:flex-end; gap:var(--space-sm)">
         <button value="cancel">Annuler</button>
-        <button id="btnSavePos" value="default" class="primary">Enregistrer</button>
-      </menu>
-      <div id="ap_status" class="small muted" style="margin-top:6px"></div>
+        <button id="btnSavePos" value="default" class="btn-primary">Enregistrer</button>
+      </div>
+      <div id="ap_status" class="status-msg mt-sm"></div>
     </form>
   </dialog>
-    <!-- Requêtes CSR -->
-    <section class="card">
-  <h3>Requêtes CSR</h3>
-  <div class="row" style="gap:10px; align-items:center">
-    <select id="csrSelect" style="min-width:280px"></select>
-    <span class="small muted">Paramètres :</span>
-    <div id="csrParams" class="row" style="gap:8px; flex-wrap:wrap"></div>
-    <button id="csrRun" class="primary">Exécuter</button>
-  </div>
-  <div id="csrOut" class="table-wrap" style="margin-top:10px"></div>
-</section>
 
+  <!-- Toast container -->
+  <div id="toasts" class="toast-container"></div>
 
   <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="./js/core.js" defer></script>
   <script src="./js/app.js" defer></script>
   <script src="./js/dashboard.js" defer></script>
-  <script src="./js/script.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </body>
-</html>
 
+</html>

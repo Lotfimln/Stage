@@ -1,6 +1,6 @@
 // js/dashboard.js
 (() => {
-  const { api, state } = window.core;     // fetch + JWT
+  const { api, state, isAdmin } = window.core;     // fetch + JWT + rôle
   const $  = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
   const shorten = (s, n=40) => (s && s.length>n ? s.slice(0,n-1)+'…' : (s||'(N/A)'));
@@ -106,12 +106,7 @@ function enableZoom(canvas, chart, title = "") {
   const charts = {};
   async function loadTopCharts(){
     try{
-      const [themes, structs] = await Promise.all([
-        api("/api/stats/top/themes?limit=10"),
-        api("/api/stats/top/structures?limit=10"),
-      ]);
-
-      // Top thématiques
+      const themes = await api("/api/stats/top/themes?limit=10");
       const c1 = document.getElementById("chTopThemes")?.getContext("2d");
       if (c1){
         const chart = new Chart(c1, {
@@ -125,21 +120,32 @@ function enableZoom(canvas, chart, title = "") {
         charts.topThemes = chart;
         enableZoom(c1.canvas, chart, "Top thématiques");
       }
+    }catch(e){}
+  }
 
-      // Top structures
-      const c2 = document.getElementById("chTopStructs")?.getContext("2d");
-      if (c2){
-        const chart = new Chart(c2, {
-          type:"bar",
-          data:{
-            labels: (structs||[]).map(x => shorten(x.label ?? x.LABEL ?? String(x.id ?? x.ID), 45)),
-            datasets:[{ label:"Personnes", data:(structs||[]).map(x => x.cnt ?? x.CNT ?? x.count ?? 0) }]
-          },
-          options: { ...baseOpts, indexAxis:"y", scales:{ x:baseOpts.scales.y, y:baseOpts.scales.x } }
-        });
-        charts.topStructs = chart;
-        enableZoom(c2.canvas, chart, "Top structures");
-      }
+  // ========== Thèmes sans expert ==========
+  async function loadThemesNoExpert(){
+    try{
+      const rows = await api("/api/stats/themes_no_expert");
+      const box = document.getElementById("noExpertList");
+      if (!box || !rows?.length) return;
+      const hdr = `<table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <thead><tr style="border-bottom:1px solid #1f2937; color:#94a3b8; text-align:left;">
+          <th style="padding:4px 8px; width:50px;">ID</th>
+          <th style="padding:4px 8px;">Thème</th>
+          <th style="padding:4px 8px; width:40px; text-align:center;">Niv.</th>
+          <th style="padding:4px 8px;">Hiérarchie</th>
+        </tr></thead><tbody>`;
+      const body = rows.map(r => {
+        const hier = r.hierarchy || r.label;
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+          <td style="padding:4px 8px; color:#64748b;">${r.id}</td>
+          <td style="padding:4px 8px; color:#e5e7eb;">${r.label}</td>
+          <td style="padding:4px 8px; text-align:center; color:#f59e0b;">${r.niveau}</td>
+          <td style="padding:4px 8px; color:#64748b; font-size:11px;">${hier}</td>
+        </tr>`;
+      }).join('');
+      box.innerHTML = hdr + body + '</tbody></table>';
     }catch(e){}
   }
   async function initModQueries(){
@@ -251,7 +257,7 @@ function enableZoom(canvas, chart, title = "") {
     const term = (q ?? '').trim();
     try{
       const rows = await window.core.api('/api/structures/find?q=' + encodeURIComponent(term));
-      return (rows||[]).map(r => ({ id:Number(r.id ?? r.ID), label:String(r.label ?? r.LABEL ?? r.id) }));
+      return (rows||[]).map(r => ({ id:Number(r.id ?? r.ID), label:String(r.label ?? r.LABEL ?? r.id), acronyme:String(r.acronyme ?? r.ACRONYME ?? r.label ?? r.id) }));
     }catch{return []}
   }
 
@@ -319,10 +325,27 @@ function enableZoom(canvas, chart, title = "") {
   }
 
   // 3.3 — normalisation des champs (compatible ancien/nouveau format)
+  // Traduction des noms de paramètres pour les chercheurs
+  const PARAM_LABELS = {
+    include_desc:         'Inclure les sous-thèmes',
+    theme_ids:            'Thèmes à inclure',
+    exclude_theme_ids:    'Thèmes à exclure',
+    structure_id:         'Structure',
+    structure_ids:        'Structures',
+    include_structures:   'Structures à inclure',
+    exclude_structures:   'Structures à exclure',
+    person_id:            'Chercheur',
+    root_theme_id:        'Thème racine',
+    role:                 'Rôle',
+    temporalite:          'Temporalité',
+    mode:                 'Mode (Manuel / Auto)',
+    match:                'Correspondance (UN / TOUS)',
+  };
+
   function normalizeFields(q){
     if (q && q.schema && Array.isArray(q.schema.fields)) {
       return q.schema.fields.map(f => ({
-        key: f.key, label: f.label || f.key, type: f.type || 'text',
+        key: f.key, label: f.label || PARAM_LABELS[f.key] || f.key, type: f.type || 'text',
         options: f.options || [], placeholder: f.placeholder || '',
         default: f.default, rawType: f.rawType || f.type || 'text'
       }));
@@ -333,10 +356,11 @@ function enableZoom(canvas, chart, title = "") {
                       temporalite:["*","Présent","Passé"],
                       mode:["*","AUTO","MANU"], match:["ANY","ALL"] };
     Object.entries(p).forEach(([key,typ])=>{
-      if (key in SELECTS)   { res.push({key,label:key,type:'select',options:SELECTS[key],default:SELECTS[key][0],rawType:'str'}); return; }
-      if (typ==='bool')     { res.push({key,label:key,type:'checkbox',default:true,rawType:'bool'}); return; }
-      if (typ==='int'||typ==='int?'){ res.push({key,label:key,type:'number',placeholder:typ,rawType:typ}); return; }
-      res.push({key,label:key,type:'text',placeholder:typ,rawType:typ});
+      const lbl = PARAM_LABELS[key] || key;
+      if (key in SELECTS)   { res.push({key,label:lbl,type:'select',options:SELECTS[key],default:SELECTS[key][0],rawType:'str'}); return; }
+      if (typ==='bool')     { res.push({key,label:lbl,type:'checkbox',default:true,rawType:'bool'}); return; }
+      if (typ==='int'||typ==='int?'){ res.push({key,label:lbl,type:'number',placeholder:typ,rawType:typ}); return; }
+      res.push({key,label:lbl,type:'text',placeholder:typ,rawType:typ});
     });
     return res;
   }
@@ -358,33 +382,113 @@ function enableZoom(canvas, chart, title = "") {
     });
   }
 
-  // ========== Répartition rôles / temporalité ==========
-  async function loadDistribution(){
+  // ========== Distribution thèmes par personne ==========
+  async function loadThemesPerPerson(){
     try{
-      const dist = await api("/api/stats/distribution");
-
-      // Rôles
-      const rctx = document.getElementById("chRoles")?.getContext("2d");
-      if (rctx){
-        const d = Array.isArray(dist?.role) ? dist.role : [];
-        const chart = new Chart(rctx, {
-          type:"doughnut",
-          data:{ labels:d.map(x=>x.label ?? x.LABEL), datasets:[{ data:d.map(x=>x.cnt ?? x.CNT ?? 0) }] },
-          options:{ ...baseOpts, cutout:"60%" }
+      const rows = await api("/api/stats/themes_per_person");
+      const ctx = document.getElementById("chThemeDist")?.getContext("2d");
+      if (ctx && rows?.length){
+        const chart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: rows.map(x => x.bucket + ' thème' + (x.bucket > 1 ? 's' : '')),
+            datasets: [{
+              label: "Personnes",
+              data: rows.map(x => x.people),
+              backgroundColor: 'rgba(139, 92, 246, 0.7)',
+              borderColor: 'rgba(139, 92, 246, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: baseOpts
         });
-        charts.roles = chart; enableZoom(rctx.canvas, chart, "Rôles");
+        charts.themeDist = chart;
+        enableZoom(ctx.canvas, chart, "Distribution thèmes / personne");
       }
+    }catch(e){ /* silencieux */ }
+  }
 
-      // Temporalité
-      const tctx = document.getElementById("chTempo")?.getContext("2d");
-      if (tctx){
-        const d = Array.isArray(dist?.temporalite) ? dist.temporalite : [];
-        const chart = new Chart(tctx, {
-          type:"doughnut",
-          data:{ labels:d.map(x=>x.label ?? x.LABEL), datasets:[{ data:d.map(x=>x.cnt ?? x.CNT ?? 0) }] },
-          options:{ ...baseOpts, cutout:"60%" }
+  // ========== Effectifs par structure (toutes) ==========
+  async function loadAllStructures(){
+    try{
+      const rows = await api("/api/stats/all_structures");
+      const ctx = document.getElementById("chAllStructs")?.getContext("2d");
+      if (ctx && rows?.length){
+        const chart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: rows.map(x => x.acronyme || shorten(x.label, 20)),
+            datasets: [{
+              label: "Chercheurs (Présent)",
+              data: rows.map(x => x.cnt),
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            ...baseOpts,
+            indexAxis: "y",
+            scales: {
+              x: { grid: { color: 'rgba(255,255,255,.08)' }, ticks: { color: '#cbd5e1' } },
+              y: { grid: { color: 'rgba(255,255,255,.08)' }, ticks: { color: '#cbd5e1', font: { size: 11 } } }
+            }
+          }
         });
-        charts.tempo = chart; enableZoom(tctx.canvas, chart, "Temporalité");
+        charts.allStructs = chart;
+        enableZoom(ctx.canvas, chart, "Effectifs par structure");
+      }
+    }catch(e){ /* silencieux */ }
+  }
+
+  // ========== Couverture thématique niveau 1 ==========
+  async function loadThemesCoverage(){
+    try{
+      const rows = await api("/api/stats/themes_coverage");
+      const ctx = document.getElementById("chThemesCoverage")?.getContext("2d");
+      if (ctx && rows?.length){
+        const chart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: rows.map(x => shorten(x.label, 35)),
+            datasets: [
+              {
+                label: "Experts",
+                data: rows.map(x => x.experts),
+                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 1
+              },
+              {
+                label: "Contributeurs",
+                data: rows.map(x => x.contributeurs),
+                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+              },
+              {
+                label: "Utilisateurs",
+                data: rows.map(x => x.utilisateurs),
+                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            ...baseOpts,
+            scales: {
+              x: { stacked: true, grid: { color: 'rgba(255,255,255,.08)' }, ticks: { color: '#cbd5e1', font: { size: 10 }, maxRotation: 45 } },
+              y: { stacked: true, grid: { color: 'rgba(255,255,255,.08)' }, ticks: { color: '#cbd5e1' } }
+            },
+            plugins: {
+              legend: { labels: { color: '#e5e7eb' } },
+              tooltip: { mode: 'index', intersect: false, titleColor: '#e5e7eb', bodyColor: '#e5e7eb' }
+            }
+          }
+        });
+        charts.themesCoverage = chart;
+        enableZoom(ctx.canvas, chart, "Couverture thématique — Niveau 1");
       }
     }catch(e){ /* silencieux */ }
   }
@@ -510,106 +614,53 @@ function enableZoom(canvas, chart, title = "") {
   // --- utils souples  ---
     const pick = (r, ...names) => { for (const n of names) if (r?.[n] !== undefined) return r[n]; };
 
-    // ===================== QUERY BUILDER =====================
-    let qbRows = [];
-
-    async function initQueryBuilder(){
-      // Pickers (multi/single)
-      attachPicker(document.getElementById('qbThemeInc'),  { mode:'multi',  fetcher:fetchThemesLike,  minChars:0 });
-      attachPicker(document.getElementById('qbThemeExc'),  { mode:'multi',  fetcher:fetchThemesLike,  minChars:0 });
-      attachPicker(document.getElementById('qbStructInc'), { mode:'multi',  fetcher:fetchStructsLike, minChars:0 });
-      attachPicker(document.getElementById('qbStructExc'), { mode:'multi',  fetcher:fetchStructsLike, minChars:0 });
-
-      document.getElementById('qbRun')?.addEventListener('click', runQB);
-      document.getElementById('qbCSV')?.addEventListener('click', exportQB);
+    // ===================== NOUVEAUX WIDGETS =====================
+    async function loadTopStructuresDiversity() {
+      try {
+        const rows = await api("/api/stats/top_structures_diversity");
+        const box = document.getElementById("topStructuresDivList");
+        if (!box || !rows?.length) return;
+        const hdr = `<table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead><tr style="border-bottom:1px solid #1f2937; color:#94a3b8; text-align:left;">
+            <th style="padding:4px 8px;">Structure</th>
+            <th style="padding:4px 8px; width:70px; text-align:right;">Thèmes dist.</th>
+          </tr></thead><tbody>`;
+        const body = rows.map((r, i) => {
+          return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+            <td style="padding:8px 8px; color:#e5e7eb;">
+              <strong>${r.label}</strong>
+            </td>
+            <td style="padding:8px 8px; text-align:right; color:#3b82f6; font-weight:bold;">${r.total}</td>
+          </tr>`;
+        }).join('');
+        box.innerHTML = hdr + body + '</tbody></table>';
+      } catch(e){}
     }
 
-    function getPickerValue(id) {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      return (typeof el._getValue === 'function') ? el._getValue() : (el.value ?? null);
-    }
-
-
-  async function runQB(){
-    const themeInc   = getPickerValue('qbThemeInc') || [];
-    const themeExc   = new Set(getPickerValue('qbThemeExc') || []);
-    const structInc  = getPickerValue('qbStructInc') || [];
-    const structExc  = new Set(getPickerValue('qbStructExc') || []);
-    const role       = document.getElementById('qbRole')?.value || '*';
-    const temp       = document.getElementById('qbTemp')?.value || '*';
-    const mode       = document.getElementById('qbMode')?.value || '*';
-    const match      = document.getElementById('qbMatch')?.value || 'ANY';
-    const includeDesc= !!document.getElementById('qbIncludeDesc')?.checked;
-
-    // === Body sans jokers
-    const body = { include_desc: includeDesc };
-
-    if (themeInc.length)        body.theme_ids    = themeInc;
-    if (structInc.length === 1) body.structure_id = Number(structInc[0]);
-    if (role !== '*')           body.role         = role;
-    if (temp !== '*')           body.temporalite  = temp;
-    if (mode !== '*')           body.mode         = mode;
-
-
-    let rows = [];
-    try {
-      rows = await window.core.api('/api/people/search', {
-        method: 'POST',
-        body: JSON.stringify(body)
-      });
-    } catch { rows = []; }
-
-    // filtres côté client (inchangés)
-    if (structInc.length > 1) {
-      const keep = new Set(structInc.map(Number));
-      rows = rows.filter(r => keep.has(Number(pick(r,'idstructure','IDSTRUCTURE'))));
-    }
-    if (structExc.size) rows = rows.filter(r => !structExc.has(Number(pick(r,'idstructure','IDSTRUCTURE'))));
-    if (themeExc.size)  rows = rows.filter(r => !themeExc.has(Number(pick(r,'idtheme','IDTHEME'))));
-
-    if (match === 'ALL' && themeInc.length) {
-      const need = new Set(themeInc.map(Number));
-      const byPers = new Map();
-      rows.forEach(r => {
-        const pid = Number(pick(r,'idpers','IDPERS'));
-        const tid = Number(pick(r,'idtheme','IDTHEME'));
-        if (!byPers.has(pid)) byPers.set(pid, new Set());
-        byPers.get(pid).add(tid);
-      });
-      const ok = new Set([...byPers.entries()]
-        .filter(([_, set]) => [...need].every(t => set.has(t)))
-        .map(([pid]) => pid));
-      rows = rows.filter(r => ok.has(Number(pick(r,'idpers','IDPERS'))));
-    }
-
-    qbRows = rows;
-    renderTable(qbRows, 'qbTable');
-    document.getElementById('qbOut').style.display = '';
-  }
-
-      
-
-
-
-    function exportQB(){
-      if (!qbRows || !qbRows.length) return;
-      const cols = Object.keys(qbRows[0]);
-      const csv = [
-        cols.join(';'),
-        ...qbRows.map(r => cols.map(c => {
-          const v = (r[c] ?? '');
-          const s = String(v).replace(/"/g,'""');
-          return `"${s}"`;
-        }).join(';'))
-      ].join('\n');
-
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url  = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'resultats.csv';
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
+    async function loadTopResearchers() {
+      try {
+        const rows = await api("/api/stats/top_researchers");
+        const box = document.getElementById("topResearchersList");
+        if (!box || !rows?.length) return;
+        const anonNote = !isAdmin() ? `<div style="margin-bottom:8px;padding:4px 10px;background:rgba(251,191,36,.1);color:#fbbf24;border-radius:6px;font-size:11px;">
+          \ud83d\udd12 Donn\u00e9es anonymis\u00e9es \u2014 mode invit\u00e9</div>` : '';
+        const hdr = `${anonNote}<table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead><tr style="border-bottom:1px solid #1f2937; color:#94a3b8; text-align:left;">
+            <th style="padding:4px 8px; width:50px;">ID</th>
+            <th style="padding:4px 8px;">Chercheur</th>
+            <th style="padding:4px 8px; width:60px; text-align:right;">Th\u00e8mes</th>
+          </tr></thead><tbody>`;
+        const body = rows.map((r, i) => {
+          return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+            <td style="padding:8px 8px; color:#64748b;">${!isAdmin() ? (i+1) : r.id}</td>
+            <td style="padding:8px 8px; color:#e5e7eb;">
+              <strong>${r.label}</strong>
+            </td>
+            <td style="padding:8px 8px; text-align:right; color:#10b981; font-weight:bold;">${r.total}</td>
+          </tr>`;
+        }).join('');
+        box.innerHTML = hdr + body + '</tbody></table>';
+      } catch(e){}
     }
 
 
@@ -619,9 +670,12 @@ function enableZoom(canvas, chart, title = "") {
       bootDashboardOnce._did = true;
       loadKPIs().catch(()=>{});
       loadTopCharts().catch(()=>{});
-      loadDistribution().catch(()=>{});
-      initQueryBuilder();
-
+      loadThemesNoExpert().catch(()=>{});
+      loadThemesPerPerson().catch(()=>{});
+      loadAllStructures().catch(()=>{});
+      loadThemesCoverage().catch(()=>{});
+      loadTopStructuresDiversity().catch(()=>{});
+      loadTopResearchers().catch(()=>{});
     }
 
     // Au chargement: uniquement si déjà connecté
@@ -639,5 +693,7 @@ function enableZoom(canvas, chart, title = "") {
       if (id === 'qbRun') { e.preventDefault(); try { runQB(); } catch(err) { console.error(err); } }
       if (id === 'qbCSV') { e.preventDefault(); try { exportQB(); } catch(err) { console.error(err); } }
     });
+
+
 
 })();

@@ -1,6 +1,6 @@
 // app.js
 (() => {
-  const { $, state, setBaseUrl, setToken, api, login, logout } = window.core;
+  const { $, state, setBaseUrl, setToken, api, login, logout, isAdmin } = window.core;
 
   // --- état local
   let selectedThemeId = null;
@@ -47,7 +47,10 @@
     if (authed) {
       showView('app');
       const who = $('whoami');
-      if (who) who.textContent = state.user ? `Connecté : ${state.user}` : 'Connecté';
+      if (who) {
+        const roleBadge = isAdmin() ? '' : ' (invité)';
+        who.textContent = state.user ? `Connecté : ${state.user}${roleBadge}` : 'Connecté';
+      }
       const t = $('token'); if (t) t.value = state.token;
       const b = $('baseUrl'); if (b) b.value = state.baseUrl;
       const check = $('check'); if (check) check.click();
@@ -83,6 +86,26 @@
         showView('login');
       }
     });
+
+    // Guest login button
+    const guest = $('btnGuest');
+    if (guest) {
+      guest.onclick = async () => {
+        try {
+          setBaseUrl(($('loginBaseUrl')?.value || '').trim());
+          setStatus('Connexion invité…');
+          const tok = await login('guest', '');
+          $('token') && ($('token').value = tok);
+          $('baseUrl') && ($('baseUrl').value = state.baseUrl);
+          setStatus(' Connecté en tant qu\'invité', 'ok');
+          updateAuthUI();
+          if (window.reloadCSRQueries) window.reloadCSRQueries();
+        } catch (e) {
+          setStatus((e?.message || e), 'err');
+          showView('login');
+        }
+      };
+    }
 
     const out = $('logoutBtn');
     if (out) {
@@ -243,7 +266,12 @@
           });
 
           renderPeople(rows);
-          setStatus(`${rows.length} résultat(s) pour « ${selectedThemeLabel} »`, 'ok');
+          // Handle count-only response for viewers
+          if (rows.length === 1 && rows[0].total_personnes !== undefined) {
+            setStatus(`${rows[0].total_personnes} personne(s) trouvée(s) pour « ${selectedThemeLabel} » (données anonymisées)`, 'ok');
+          } else {
+            setStatus(`${rows.length} résultat(s) pour « ${selectedThemeLabel} »`, 'ok');
+          }
         } catch (e) {
           setStatus(e.message, 'err');
         }
@@ -257,7 +285,12 @@
           setStatus('Chargement des non positionnés…');
           // NB: on ne mémorise pas cette "recherche" dans lastSearchBody
           const data = await api('/api/stats/non_positionnes');
-          renderPeople(data.people || []);
+          if (data.people && data.people.length) {
+            renderPeople(data.people);
+          } else {
+            // Viewer: empty list, show count only
+            renderPeople([{total_personnes: data.total}]);
+          }
           setStatus(`${data.total} personne(s) sans positionnement`, 'ok');
         } catch (e) {
           setStatus(e.message, 'err');
@@ -270,6 +303,16 @@ function renderPeople(rows) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
+  // Handle count-only response (viewer mode)
+  if (rows && rows.length === 1 && rows[0].total_personnes !== undefined) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="7" style="text-align:center; padding:24px; color:#fbbf24; font-size:15px;">
+      \ud83d\udd12 <strong>${rows[0].total_personnes}</strong> personne(s) trouvée(s) — données nominatives masquées (mode invité)
+    </td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
   (rows || []).forEach(r => {
     const tr = document.createElement('tr');
 
@@ -280,6 +323,7 @@ function renderPeople(rows) {
     const role  = pick(r, 'libcontribution', 'LIBCONTRIBUTION', 'role', 'ROLE') || '';
     const temp  = pick(r, 'libelletemporalite', 'LIBELLETEMPORALITE', 'temp', 'TEMP') || '';
     const idStr = pick(r, 'idstructure', 'IDSTRUCTURE');
+    const structAcro = pick(r, 'structure_acronyme', 'STRUCTURE_ACRONYME') || idStr;
 
     const auto = pick(r, 'auto_genere', 'AUTO_GENERE');
     const isManual = (auto == null || String(auto) !== '0'); // MANU si auto_genere null ou != '0'
@@ -290,7 +334,7 @@ function renderPeople(rows) {
       <td>${escapeHtml(theme)}</td>
       <td>${escapeHtml(role)}</td>
       <td>${escapeHtml(temp)}</td>
-      <td>${idStr ?? ''}</td>
+      <td title="ID: ${idStr ?? ''}">${structAcro ?? ''}</td>
       <td style="text-align:right; white-space:nowrap;"></td>
     `;
 
@@ -654,12 +698,28 @@ function setupAutocomplete() {
   }
 }
 // ---------- Requêtes CSR ----------
+const PARAM_LABELS = {
+  include_desc:         'Inclure les sous-thèmes',
+  theme_ids:            'Thèmes à inclure',
+  exclude_theme_ids:    'Thèmes à exclure',
+  structure_id:         'Structure',
+  structure_ids:        'Structures',
+  include_structures:   'Structures à inclure',
+  exclude_structures:   'Structures à exclure',
+  person_id:            'Chercheur',
+  root_theme_id:        'Thème racine',
+  role:                 'Rôle',
+  temporalite:          'Temporalité',
+  mode:                 'Mode (Manuel / Auto)',
+  match:                'Correspondance (UN / TOUS)',
+};
+
 function normalizeFields(q) {
   // Nouveau format (schema.fields)
   if (q && q.schema && Array.isArray(q.schema.fields)) {
     return q.schema.fields.map(f => ({
       key: f.key,
-      label: f.label || f.key,
+      label: f.label || PARAM_LABELS[f.key] || f.key,
       type: f.type || 'text',
       options: f.options || [],
       placeholder: f.placeholder || '',
@@ -680,20 +740,21 @@ function normalizeFields(q) {
   };
 
   Object.entries(p).forEach(([key, typ]) => {
+    const lbl = PARAM_LABELS[key] || key;
     if (key in SELECTS) {
-      res.push({ key, label: key, type: 'select', options: SELECTS[key], default: SELECTS[key][0], rawType: 'str' });
+      res.push({ key, label: lbl, type: 'select', options: SELECTS[key], default: SELECTS[key][0], rawType: 'str' });
       return;
     }
     if (typ === 'bool') {
-      res.push({ key, label: key, type: 'checkbox', default: true, rawType: 'bool' });
+      res.push({ key, label: lbl, type: 'checkbox', default: true, rawType: 'bool' });
       return;
     }
     if (typ === 'int' || typ === 'int?') {
-      res.push({ key, label: key, type: 'number', placeholder: typ, rawType: typ });
+      res.push({ key, label: lbl, type: 'number', placeholder: typ, rawType: typ });
       return;
     }
     // int[] / str -> text (on garde le type d’origine dans rawType)
-    res.push({ key, label: key, type: 'text', placeholder: typ, rawType: typ });
+    res.push({ key, label: lbl, type: 'text', placeholder: typ, rawType: typ });
   });
 
   return res;
@@ -804,7 +865,7 @@ async function bindCSRQueries() {
         mode: 'single',
         chipSingle : true,
         fetcher: fetchStructsLike,
-        toItem: r => ({ id: r.id, label: r.label }),
+        toItem: r => ({ id: r.id, label: `${r.acronyme} — ${r.label}` }),
         minChars: 0
       });
     } else if (['structure_ids','include_structures','exclude_structures'].includes(k)) {
@@ -813,7 +874,7 @@ async function bindCSRQueries() {
       attachPicker(input, {
         mode: 'multi',
         fetcher: fetchStructsLike,
-        toItem: r => ({ id: r.id, label: r.label }),
+        toItem: r => ({ id: r.id, label: `${r.acronyme} — ${r.label}` }),
         minChars: 0
       });
       } else if (f.key === 'theme_ids' || f.key === 'exclude_theme_ids') {
@@ -915,47 +976,92 @@ async function bindCSRQueries() {
   };
 }
 
-function renderCSRTable(rows) {
+// ── structure acronym cache ───────────────────────────────────────
+let _structMap = null; // id → acronyme
+async function getStructMap() {
+  if (_structMap) return _structMap;
+  try {
+    const rows = await safeFind('/api/structures/find?q=');
+    _structMap = {};
+    (rows || []).forEach(r => { _structMap[r.id] = r.acronyme || r.label || String(r.id); });
+    return _structMap;
+  } catch { return {}; }
+}
+
+// Column display names
+const COL_LABELS = {
+  idpers: 'ID', nom: 'Nom', prenom: 'Prénom',
+  idtheme: 'Thème ID', theme: 'Thème', themes: 'Thèmes',
+  role: 'Rôle', temporalite: 'Temporalité',
+  idstructure: 'Structure', libellestructure: 'Structure',
+  structure_acronyme: 'Structure',
+};
+
+async function renderCSRTable(rows) {
+  const smap = await getStructMap();
+
   // Compat : soit table avec thead/tbody, soit un conteneur libre (#csrOut)
   const thead = $('csrThead');
   const tbody = $('csrTbody');
   const out   = $('csrOut');
 
+  if (!rows || !rows.length) {
+    if (thead) thead.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
+    if (out)   out.textContent = '(aucun résultat)';
+    return;
+  }
+
+  // Decide which columns to show (skip libellestructure if idstructure present)
+  let cols = Object.keys(rows[0]);
+  const hasIdStruct = cols.includes('idstructure');
+  if (hasIdStruct) cols = cols.filter(c => c !== 'libellestructure');
+
+  function cellValue(r, c) {
+    const v = r[c];
+    if (c === 'idstructure' && v != null) return smap[v] || v;
+    if (c === 'libellestructure' && r.idstructure == null && v != null) {
+      // find by label match
+      const entry = Object.entries(smap).find(([,acro]) => acro === v);
+      return entry ? entry[1] : v;
+    }
+    return v ?? '';
+  }
+
+  function colLabel(c) {
+    return COL_LABELS[c.toLowerCase()] || c.toUpperCase();
+  }
+
   if (thead && tbody) {
     thead.innerHTML = '';
     tbody.innerHTML = '';
-    if (!rows || !rows.length) return;
-
-    const cols = Object.keys(rows[0]);
 
     const trh = document.createElement('tr');
-    cols.forEach(c => { const th = document.createElement('th'); th.textContent = c; trh.appendChild(th); });
+    cols.forEach(c => { const th = document.createElement('th'); th.textContent = colLabel(c); trh.appendChild(th); });
     thead.appendChild(trh);
 
     rows.forEach(r => {
       const tr = document.createElement('tr');
-      cols.forEach(c => { const td = document.createElement('td'); td.textContent = r[c] ?? ''; tr.appendChild(td); });
+      cols.forEach(c => { const td = document.createElement('td'); td.textContent = cellValue(r, c); tr.appendChild(td); });
       tbody.appendChild(tr);
     });
   } else if (out) {
     out.innerHTML = '';
-    if (!rows || !rows.length) { out.textContent = '(aucun résultat)'; return; }
 
-    const cols = Object.keys(rows[0]);
     const tbl = document.createElement('table'); tbl.style.width = '100%'; tbl.style.borderCollapse = 'collapse';
 
-    const thead = document.createElement('thead');
+    const theadEl = document.createElement('thead');
     const trh = document.createElement('tr');
-    cols.forEach(c => { const th = document.createElement('th'); th.textContent = c; th.style.padding='8px 10px'; th.style.borderBottom='1px solid #1f2937'; trh.appendChild(th); });
-    thead.appendChild(trh); tbl.appendChild(thead);
+    cols.forEach(c => { const th = document.createElement('th'); th.textContent = colLabel(c); th.style.padding='8px 10px'; th.style.borderBottom='1px solid #1f2937'; trh.appendChild(th); });
+    theadEl.appendChild(trh); tbl.appendChild(theadEl);
 
-    const tbody = document.createElement('tbody');
+    const tbodyEl = document.createElement('tbody');
     rows.forEach(r => {
       const tr = document.createElement('tr');
-      cols.forEach(c => { const td = document.createElement('td'); td.textContent = r[c] ?? ''; td.style.padding='8px 10px'; td.style.borderBottom='1px solid #1f2937'; tr.appendChild(td); });
-      tbody.appendChild(tr);
+      cols.forEach(c => { const td = document.createElement('td'); td.textContent = cellValue(r, c); td.style.padding='8px 10px'; td.style.borderBottom='1px solid #1f2937'; tr.appendChild(td); });
+      tbodyEl.appendChild(tr);
     });
-    tbl.appendChild(tbody);
+    tbl.appendChild(tbodyEl);
     out.appendChild(tbl);
   }
 }
@@ -993,7 +1099,8 @@ async function fetchStructsLike(q) {
     const rows = await window.core.api('/api/structures/find?q=' + encodeURIComponent(term));
     return (rows || []).map(r => ({
       id: Number(r.id ?? r.ID),
-      label: String(r.label ?? r.LABEL ?? r.id ?? r.ID)
+      label: String(r.label ?? r.LABEL ?? r.id ?? r.ID),
+      acronyme: String(r.acronyme ?? r.ACRONYME ?? r.label ?? r.id)
     }));
   } catch { return []; }
 }

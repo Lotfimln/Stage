@@ -1,153 +1,138 @@
 <!doctype html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8" />
-  <title>Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — CSR IRIT</title>
+  <meta name="description"
+    content="Tableau de bord de la cartographie scientifique IRIT — statistiques, visualisations et constructeur de requêtes." />
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
-<body class="bg-slate-900 text-slate-200">
 
-<header class="topbar">
-  <a href="index.html" class="back">← Accueil</a>
-  <h1>Dashboard</h1>
-  <span></span>
-</header>
+<body>
 
-<main class="container layout-dashboard">
-  <!-- Colonne KPI -->
-  <aside class="kpis">
-    <div class="card kpi"><h4>Pers. positionnées (Présent)</h4><div id="kpiPeople" class="v">—</div></div>
-    <div class="card kpi"><h4>Pers. non positionnées (Présent)</h4><div id="kpiNonPos" class="v">—</div></div>
-    <div class="card kpi"><h4>Thématiques actives (Présent)</h4><div id="kpiThemes" class="v">—</div></div>
-    <div class="card kpi"><h4>Structures actives (Présent)</h4><div id="kpiStructs" class="v">—</div></div>
-    <div class="card kpi"><h4>Thèmes / personne (moy.)</h4><div id="kpiAvg" class="v">—</div></div>
-  </aside>
+  <!-- Topbar -->
+  <nav class="topbar">
+    <div class="logo">
+      <a href="index.html"
+        style="color:inherit; text-decoration:none; display:flex; align-items:center; gap:var(--space-sm);">
+        <span class="logo-accent">CSR</span> IRIT
+      </a>
+    </div>
+    <div class="spacer"></div>
+    <a href="index.html" style="font-size:var(--font-size-sm); color:var(--color-text-muted)">
+      ← Retour à l'exploration
+    </a>
+  </nav>
 
-  <!-- Zone graphiques -->
-  <section class="dash-grid">
-    <div class="card span-7 enlargeable">
-      <h4>Top thématiques (personnes présentes)</h4>
-      <div class="chart-wrap h260"><canvas id="chTopThemes" class="chart"></canvas></div>
+  <div class="dashboard-layout">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
     </div>
 
-    <div class="card span-5 enlargeable">
-      <h4>Top structures (personnes présentes)</h4>
-      <div class="chart-wrap h260"><canvas id="chTopStructs" class="chart"></canvas></div>
-    </div>
-
-    <div class="card span-6 enlargeable">
-      <h4>Rôles (Présent)</h4>
-      <div class="chart-wrap h220"><canvas id="chRoles" class="chart"></canvas></div>
-    </div>
-
-    <div class="card span-6 enlargeable">
-      <h4>Temporalité</h4>
-      <div class="chart-wrap h220"><canvas id="chTempo" class="chart"></canvas></div>
-    </div>
-
-    <!-- ===== Constructeur de requêtes (modulable) ===== -->
-    <div class="card span-12" id="qbCard" style="margin-top:12px">
-      <h4>Constructeur de requêtes</h4>
-
-      <div class="qb-grid"
-          style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
-
-        <div>
-          <div class="small muted">Thèmes à inclure</div>
-          <input id="qbThemeInc" type="text" class="picker-input" placeholder="ajouter des thèmes…">
-          <label class="small" style="display:flex;gap:6px;align-items:center;margin-top:6px">
-            <input id="qbIncludeDesc" type="checkbox" checked> Inclure les sous-thèmes
-          </label>
-        </div>
-
-        <div>
-          <div class="small muted">Thèmes à exclure</div>
-          <input id="qbThemeExc" type="text" class="picker-input" placeholder="exclure des thèmes…">
-        </div>
-
-        <div>
-          <div class="small muted">Structures à inclure</div>
-          <input id="qbStructInc" type="text" class="picker-input" placeholder="ajouter des structures…">
-        </div>
-
-        <div>
-          <div class="small muted">Structures à exclure</div>
-          <input id="qbStructExc" type="text" class="picker-input" placeholder="exclure des structures…">
-        </div>
-
-        <div>
-          <div class="small muted">Rôle</div>
-          <select id="qbRole">
-            <option>*</option><option>Expert</option><option>Contributeur</option><option>Utilisateur</option>
-          </select>
-        </div>
-
-        <div>
-          <div class="small muted">Temporalité</div>
-          <select id="qbTemp">
-            <option>*</option><option>Présent</option><option>Passé</option>
-          </select>
-        </div>
-
-        <div>
-          <div class="small muted">Mode</div>
-          <select id="qbMode">
-            <option>*</option><option>AUTO</option><option>MANU</option>
-          </select>
-        </div>
-
-        <div>
-          <div class="small muted">Correspondance (si plusieurs thèmes)</div>
-          <select id="qbMatch">
-            <option value="ANY">ANY (au moins un)</option>
-            <option value="ALL">ALL (tous)</option>
-          </select>
-        </div>
-
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Pers. positionnées (Présent)</div>
+        <div class="kpi-value" id="kpiPeople">—</div>
       </div>
-
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button id="qbRun" type="button" class="btn">Exécuter</button>
-        <button id="qbCSV" type="button" class="btn ghost">Exporter CSV</button>
+      <div class="kpi-card">
+        <div class="kpi-label">Non positionnées</div>
+        <div class="kpi-value" id="kpiNonPos">—</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Thématiques actives</div>
+        <div class="kpi-value" id="kpiThemes">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Structures actives</div>
+        <div class="kpi-value" id="kpiStructs">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Moy. thèmes / pers.</div>
+        <div class="kpi-value" id="kpiAvg">—</div>
+      </div>
+    </div>
 
-      <div id="qbOut" class="table-wrap" style="display:none;margin-top:10px">
-        <table class="table" id="qbTable"><thead></thead><tbody></tbody></table>
+    <!-- Charts row 1 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h4>Top thématiques (personnes présentes)</h4>
+        <div class="chart-wrap">
+          <canvas id="chTopThemes"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h4>Thèmes sans expert <span style="font-size:var(--font-size-xs); color:var(--color-text-muted)">(Présent,
+            manuel)</span></h4>
+        <div id="noExpertList" style="max-height:300px; overflow-y:auto; padding:4px 0;"></div>
+      </div>
+    </div>
+
+    <!-- Charts row 2 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h4>Distribution : thèmes par personne</h4>
+        <div class="chart-wrap">
+          <canvas id="chThemeDist"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h4>Effectifs par structure (Présent)</h4>
+        <div class="chart-wrap" style="height:400px">
+          <canvas id="chAllStructs"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row 2 : Couverture thématique -->
+    <div class="chart-grid">
+      <div class="chart-card" style="grid-column: 1 / -1">
+        <h4>Couverture thématique — Niveau 1 (positionnements manuels, Présent)</h4>
+        <div class="chart-wrap" style="height:400px">
+          <canvas id="chThemesCoverage"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row 3 : Rôles et Polyvalence -->
+    <div class="chart-grid" style="margin-top:var(--space-2xl)">
+      <!-- Top Structures Diversity -->
+      <div class="chart-card">
+        <h4>Diversité Thématique par Structure</h4>
+        <div id="topStructuresDivList" style="max-height:300px; overflow-y:auto; padding-right:8px; border-radius:4px;">
+          <!-- Inject tables here -->
+        </div>
+      </div>
+      <!-- Top Chercheurs Polyvalents -->
+      <div class="chart-card">
+        <h4>Top 15 Chercheurs Polyvalents (Thèmes couverts)</h4>
+        <div id="topResearchersList" style="max-height:300px; overflow-y:auto; padding-right:8px; border-radius:4px;">
+          <!-- Inject tables here -->
+        </div>
       </div>
     </div>
 
 
-  </section>
 
-
-
-
-</main>
-
-<!-- Zoom plein écran Chart.js -->
-<div id="zoomModal" class="zoom-backdrop">
-  <div class="zoom-box">
-    <header>
-      <h3 id="zoomTitle"></h3>
-      <button class="zoom-close" aria-label="Fermer">✕</button>
-    </header>
-    <div class="chart-wrap"><canvas id="zoomCanvas"></canvas></div>
   </div>
-</div>
 
-<script src="js/core.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="js/dashboard.js"></script>
-<script>
-  (function () {
-    try {
-      const tok = localStorage.getItem('csr.token');
-      if (!tok) location.href = 'index.html';
-    } catch {}
-  })();
-</script>
+  <!-- Zoom Modal -->
+  <div id="zoomModal" class="zoom-modal">
+    <div class="chart-wrap">
+      <button class="zoom-close" title="Fermer">&times;</button>
+      <h4 id="zoomTitle" style="margin-bottom:var(--space-md); color:var(--color-text-muted);"></h4>
+      <canvas id="zoomCanvas"></canvas>
+    </div>
+  </div>
 
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./js/core.js"></script>
+  <script src="./js/dashboard.js"></script>
 </body>
-</html>
 
+</html>

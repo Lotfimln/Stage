@@ -17,3 +17,7 @@ backend/data/*
 # OS / IDE
 .DS_Store
 .vscode/
+
+# Test scripts
+test_*.py
+check_*.py
