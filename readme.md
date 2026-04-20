@@ -1,247 +1,242 @@
-# Prototype CSR — Front + API (Flask)
+# CSR IRIT — Cartographie Scientifique et de Recherche
 
-Interface web (HTML/JS) + API Flask pour explorer des **personnes / thématiques / structures**, gérer des **positionnements** manuels et exécuter des **requêtes CSR** paramétrables.
-
----
-
-## Fonctionnalités
-
-- **Authentification JWT** (login simple, token côté client).
-- **Exploration des thématiques**
-  - `Charger l’arbre` (Oracle `CONNECT BY`) + rendu hiérarchique.
-  - Suggestions de thèmes (ouvre une liste même sans saisie).
-- **Recherche de personnes**
-  - Par thème(s) (avec/sans sous thèmes), rôle, temporalité, mode (AUTO/MANU) et structure.
-  - Affichage tabulaire + actions.
-- **Positionnements**
-  - **Ajouter** un positionnement **MANU** (formulaire dédié).
-  - **Supprimer** un positionnement **MANU** (les “AUTO” sont protégés).
-- **Pickers** ergonomiques (thèmes / structures / personnes)
-  - Ouverture au focus, **navigation clavier** (↑/↓/Enter/Esc), clic.
-  - **Chips** (étiquettes) pour champs multi-valeurs, croix de suppression.
-  - `structure_id` utilise un **chip single** (croix uniquement sur le chip).
-- **Requêtes CSR** (11 modèles)
-  - Sélection → génération dynamique des champs (select/bool/number/pickers).
-  - Exécution → rendu tabulaire.
+Application web pour explorer les **positionnements de chercheurs** sur des thématiques scientifiques à l'[IRIT](https://www.irit.fr/) (Institut de Recherche en Informatique de Toulouse).
 
 ---
 
-## Structure du projet
+## ✨ Fonctionnalités
+
+### Exploration & Recherche
+- **Arbre thématique** hiérarchique (563 thèmes, CTEs récursives)
+- **Recherche multicritère** de personnes par thème(s), rôle, temporalité, mode (AUTO/MANU), structure
+- **Acronymes de structures** affichés partout (IRIS, SMAC, MISFIT…)
+- **Pickers ergonomiques** avec autocomplétion, navigation clavier (↑/↓/Enter/Esc), chips multi-valeurs
+
+### Requêtes CSR (11 modèles paramétrables)
+- Chercheurs positionnés / non positionnés sur des thèmes
+- Thèmes couverts / non couverts par des structures
+- Sous-thèmes présents/absents dans une structure
+- Exécution dynamique → rendu tabulaire
+
+### Dashboard analytique
+- KPIs globaux, top thèmes, top structures, répartition par rôle/temporalité
+- Propagation auto vs manuel, diversité thématique par structure
+- Top chercheurs polyvalents, couverture thématique niveau 1
+- Graphiques interactifs (Chart.js) avec zoom modal
+
+### Gestion des positionnements
+- **Ajouter** un positionnement manuel (formulaire dédié)
+- **Supprimer** un positionnement manuel (les AUTO sont protégés)
+- **Propagation automatique** aux thèmes parents (émulation du trigger Oracle)
+
+### Double mode d'accès 🔐
+| | Membre IRIT (admin) | Invité (viewer) |
+|---|---|---|
+| Recherche | Tableau nominatif complet | Comptage anonymisé uniquement |
+| Top chercheurs | Noms réels | "Chercheur #1", "Chercheur #2"… |
+| Stats & graphiques | ✅ | ✅ |
+| Ajout/suppression | ✅ | ❌ |
+
+---
+
+## 📁 Structure du projet
+
 ```
-.
-├── README.md
-├── requirements.txt
+Stage/
+├── .env.example              # Variables d'environnement
+├── .gitignore
+├── readme.md
+├── PROJECT_CONTEXT.md        # Documentation technique complète (pour LLM)
+│
+├── backend/
+│   ├── app.py                # Serveur Flask — tous les endpoints (1510 lignes)
+│   ├── db.py                 # Couche SQLite (fetch_all, fetch_one, execute) + auto-rebuild
+│   ├── init_db.py            # Schéma + import CSV + propagation + structures
+│   ├── audit_data.py         # Script d'audit standalone
+│   ├── requirements.txt      # Flask, Flask-Cors, PyJWT, python-dotenv, gunicorn
+│   └── data/                 # CSV sources + csr.db (généré, gitignored)
+│
 ├── frontend/
-│   ├── index.html
-│   ├── styles.css
-│   ├── core.js
-│   └── app.js
-└── backend/
-    ├── app.py
-    ├── db.py
-    └── __init__.py
+│   ├── index.html            # Page principale (login + exploration + requêtes)
+│   ├── dashboard.html        # Dashboard analytique
+│   ├── css/styles.css        # Dark theme, glassmorphism
+│   └── js/
+│       ├── core.js           # Module partagé (state, api, auth, isAdmin)
+│       ├── app.js            # Logique page principale
+│       └── dashboard.js      # Logique dashboard
+│
+└── deploy/
+    ├── deploy.sh             # Script de déploiement Linux
+    ├── nginx.conf            # Reverse proxy Nginx
+    └── csr.service           # Service systemd (gunicorn)
 ```
+
 ---
 
-## Démarrage
+## 🚀 Démarrage rapide
 
 ### Prérequis
 
 - **Python 3.10+**
-- Accès à une base **Oracle** (les requêtes utilisent `CONNECT BY`).
-- Renseigner la connexion dans `backend/db.py` (driver conseillé : `oracledb`).
+- Fichiers CSV de données dans `backend/data/` (Themes.csv, positions.csv)
 
-Installer les dépendances :
+### Installation
 
-```
-pip install Flask flask-cors PyJWT oracledb
-# ou : pip install -r requirements.txt
-
-## Lancer l’API (backend)
-
+```bash
 cd backend
+python -m venv .venv
 
-# 1) Environnement virtuel
-python3 -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/macOS
 source .venv/bin/activate
 
-# 2) Dépendances
-pip install -r ../requirements.txt
-
-# 3) Variables d'environnement (exemples)
-export SECRET_KEY="dev"
-export TOKEN_TTL_MIN=360
-
-# 4) Démarrer l’API
-py app.py
-# L’API écoute sur http://127.0.0.1:5000
-
+pip install -r requirements.txt
 ```
+
+### Configuration
+
+Copier `.env.example` en `.env` et adapter :
+
+```env
+SECRET_KEY=change-me-to-a-random-32-char-string
+TOKEN_TTL_MIN=360
+CSR_DB_PATH=./data/csr.db
+```
+
+### Lancer le serveur
+
+```bash
+cd backend
+python app.py
+```
+
+L'application est accessible sur **http://127.0.0.1:5000** (API + frontend servi par Flask).
+
+> **Note** : Au premier démarrage (ou après incrémentation de `SCHEMA_VERSION` dans `init_db.py`), la base SQLite est reconstruite automatiquement à partir des CSV.
+
 ---
-### Identifiants de développement
 
-Par défaut (configurés dans `backend/app.py`) :
+## 🔑 Identifiants
 
-- **admin / admin**
-- **lotfi / admin**
+| Utilisateur | Mot de passe | Rôle | Accès |
+|-------------|-------------|------|-------|
+| `admin` | `admin` | admin | Complet (données nominatives) |
+| `lotfi` | `admin` | admin | Complet (données nominatives) |
+| *(bouton "Continuer en tant qu'invité")* | — | viewer | Anonymisé (comptages seuls) |
 
-> A changer pour utilisation future, sécurisé & robuste
+> ⚠️ Identifiants de développement uniquement — à sécuriser pour la production.
 
 ---
 
-### Servir le front (frontend)
+## 📡 API
 
-Plusieurs options possibles :
+Tous les endpoints (sauf `/api/login` et `/api/health`) nécessitent `Authorization: Bearer <token>`.
 
-### Python HTTP server
-```
-cd frontend
-py -m http.server 5500
-# Puis ouvrir http://127.0.0.1:5500/frontend/
-```
-## Utilisation (UI)
+### Auth & Santé
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| POST | `/api/login` | Connexion → `{access_token}` |
+| GET | `/api/health` | Ping → `{status, time}` |
 
-- Ouvrir l’interface : http://127.0.0.1:5500/frontend/.
+### Thèmes
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/themes/tree` | Arbre complet |
+| GET | `/api/themes/find?q=` | Autocomplétion |
 
-- Se connecter : utilisez un identifiant de dev (voir plus haut).
+### Personnes
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/people/find?q=` | Autocomplétion |
+| POST | `/api/people/search` | Recherche multicritère |
 
-- Base URL : dans la barre supérieure, entrez http://127.0.0.1:5000.
+### Structures
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/structures/find?q=` | Autocomplétion (id, label, acronyme) |
 
-- Vérifier l’API : bouton “Check”.
+### Positionnements (admin uniquement)
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| POST | `/api/positions` | Ajouter un positionnement MANU |
+| DELETE | `/api/positions` | Supprimer un positionnement MANU |
 
-- (Optionnel) Charger l’arbre : bouton “Charger l’arbre” (utile pour naviguer visuellement dans les thèmes, non requis pour les pickers).
+### Requêtes CSR
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/queries` | Liste des 11 requêtes disponibles |
+| POST | `/api/queries/<id>` | Exécuter une requête |
 
-- Requêtes CSR :
+### Dashboard / Stats
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/api/stats/overview` | KPIs globaux |
+| GET | `/api/stats/top/themes` | Top thèmes |
+| GET | `/api/stats/top/structures` | Top structures |
+| GET | `/api/stats/distribution` | Répartition rôles/temporalité |
+| GET | `/api/stats/non_positionnes` | Personnes sans positionnement |
+| GET | `/api/stats/propagation` | Stats propagation auto/manuel |
+| GET | `/api/stats/top_researchers` | Top 15 chercheurs polyvalents |
+| GET | `/api/stats/all_structures` | Toutes les structures + comptage |
+| GET | `/api/stats/themes_coverage` | Couverture thématique niveau 1 |
+| GET | `/api/stats/people_count` | Comptage croisé structure/thème |
 
-  - Choisir une requête dans la liste.
+---
 
-  - Renseigner les paramètres (grâce aux pickers).
+## 🧪 Quick tests (cURL)
 
-  - Cliquer “Exécuter”.
-
-## Pickers (sélection assistée)
-
-- Ouverture : cliquer dans un champ ouvre un menu déroulant avec des suggestions (préchargé si possible).
-
-- Recherche : taper des caractères filtre la liste.
-
-- Navigation :
-
-  - ↓ / ↑ pour surligner un élément / survoler avec la souris (hover)
-
-  - Enter pour sélectionner / clic souris
-
-  - Esc pour fermer / clic en dehors du champs
-
-- Multi-sélection (thèmes) : les éléments choisis apparaissent sous forme d’étiquettes (chips) au-dessus du champ.
-
-  - Cliquer sur × pour retirer un chip.
-
-- Fermeture : clic à l’extérieur ou sélection d’un item.
-
-- Champs concernés :
-
-  - theme_ids, exclude_theme_ids → multi (chips)
-
-  - root_theme_id, structure_id → simple (un seul choix)
-
-  - person_id / idpers → simple, recherche par Nom/Prénom ou ID
-
-- Les pickers appellent :
-
-  - /api/themes/find?q= pour les thèmes
-
-  - /api/people/find?q= pour les personnes
-
-  - /api/structures/find?q= pour les structures
- 
-## API (aperçu)
-
-Auth / santé
-
-- POST /api/login → { access_token }
-
-- GET /api/health
-
-Thèmes
-
-- GET /api/themes/tree → arbre à plat (pour l’UI)
-
-- GET /api/themes/find?q= → suggestions
-
-Personnes
-
-- GET /api/people/find?q= → suggestions
-
-- POST /api/people/search → recherche par filtres
-
-Positionnements
-
-- POST /api/positions → ajout MANU
-
-- DELETE /api/positions → suppression MANU
-
-- GET /api/stats/non_positionnes
-
-Structures
-
-- GET /api/structures/find?q=
-
-CSR
-
-- GET /api/queries → liste des requêtes
-
-- POST /api/queries/<id> → exécution
-
-Tous les endpoints (sauf /api/login et /api/health) attendent Authorization: Bearer <token>.
-
-## Configuration
-
-Variables lues par backend/app.py :
-
-- SECRET_KEY (défaut dev) — à changer.
-
-- TOKEN_TTL_MIN (défaut 60).
-
-- FRONT_ORIGIN (défaut http://localhost:3000) — CORS : le projet autorise * pour /api/*.
-
-Connexion base : adapter backend/db.py (DSN, user/pass, etc.).
-
-## Quick tests (cURL)
-```
+```bash
 # 1) Login
 TOKEN=$(curl -s http://127.0.0.1:5000/api/login \
   -H 'Content-Type: application/json' \
-  -d '{"username":"lotfi","password":"admin"}' | jq -r .access_token)
+  -d '{"username":"admin","password":"admin"}' | jq -r .access_token)
 
 # 2) Ping
 curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:5000/api/health
 
-# 3) Themes suggestions
-curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:5000/api/themes/find?q="
+# 3) Autocomplétion thèmes
+curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:5000/api/themes/find?q=machine"
 
+# 4) Recherche multicritère
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"theme_ids":[492],"include_desc":true,"role":"*","temporalite":"Présent","mode":"*"}' \
+  http://127.0.0.1:5000/api/people/search
 ```
 
-## Dépannage
+---
 
-- Pas de liste dans les pickers :
+## 🔧 Mise à jour du schéma / données
 
-  - Vérifiez que l’API est joignable (voir Ping /api/health).
+1. Modifier `backend/init_db.py` (schéma, CSV, mappings)
+2. **Incrémenter `SCHEMA_VERSION`** (obligatoire pour déclencher le rebuild)
+3. Redémarrer le serveur → la base est reconstruite automatiquement
 
-  - Vérifiez que le token est valide (reconnectez-vous si 401).
+---
 
-- Arbre vide / Oracle :
+## 🚢 Déploiement (production)
 
-  - Confirmez la connexion dans db.py.
+Les fichiers de configuration sont dans `deploy/` :
 
-  - Les requêtes utilisent CONNECT BY (Oracle) : base requise.
+```bash
+# Copier le projet sur le serveur
+# Configurer nginx (deploy/nginx.conf)
+# Installer le service systemd (deploy/csr.service)
+# Lancer :
+sudo systemctl enable csr && sudo systemctl start csr
+```
 
-- CORS :
+---
 
-  - Le back expose les en-têtes et accepte Authorization (voir flask_cors.CORS dans app.py).
+## 🔒 Sécurité
 
-## Sécurité
+- Les identifiants en dur et la `SECRET_KEY` de développement **ne doivent pas** être utilisés en production.
+- Le mode CORS est ouvert (`*`) en dev — à restreindre en production.
+- Les mots de passe sont stockés en clair (prototype) — ajouter du hashing (bcrypt) pour la production.
 
-- Les identifiants en dur (USERS) et la SECRET_KEY de dev ne doivent pas être utilisés pour le déploiement.
+---
 
+## 📖 Documentation technique
 
+Pour une documentation exhaustive (schéma BD, mécanismes internes, architecture frontend, conventions…), voir **[PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)**.
