@@ -4,7 +4,7 @@ Application web pour explorer les **positionnements de chercheurs** sur des thé
 
 ---
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
 ### Exploration & Recherche
 - **Arbre thématique** hiérarchique (563 thèmes, CTEs récursives)
@@ -29,7 +29,7 @@ Application web pour explorer les **positionnements de chercheurs** sur des thé
 - **Supprimer** un positionnement manuel (les AUTO sont protégés)
 - **Propagation automatique** aux thèmes parents (émulation du trigger Oracle)
 
-### Double mode d'accès 🔐
+### Double mode d'accès
 | | Membre IRIT (admin) | Invité (viewer) |
 |---|---|---|
 | Recherche | Tableau nominatif complet | Comptage anonymisé uniquement |
@@ -39,7 +39,7 @@ Application web pour explorer les **positionnements de chercheurs** sur des thé
 
 ---
 
-## 📁 Structure du projet
+## Structure du projet
 
 ```
 Stage/
@@ -73,7 +73,7 @@ Stage/
 
 ---
 
-## 🚀 Démarrage rapide
+## Démarrage rapide
 
 ### Prérequis
 
@@ -117,7 +117,7 @@ L'application est accessible sur **http://127.0.0.1:5000** (API + frontend servi
 
 ---
 
-## 🔑 Identifiants
+## Identifiants
 
 | Utilisateur | Mot de passe | Rôle | Accès |
 |-------------|-------------|------|-------|
@@ -129,7 +129,7 @@ L'application est accessible sur **http://127.0.0.1:5000** (API + frontend servi
 
 ---
 
-## 📡 API
+## API
 
 Tous les endpoints (sauf `/api/login` et `/api/health`) nécessitent `Authorization: Bearer <token>`.
 
@@ -184,7 +184,7 @@ Tous les endpoints (sauf `/api/login` et `/api/health`) nécessitent `Authorizat
 
 ---
 
-## 🧪 Quick tests (cURL)
+## Quick tests (cURL)
 
 ```bash
 # 1) Login
@@ -207,7 +207,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-## 🔧 Mise à jour du schéma / données
+## Mise à jour du schéma / données
 
 1. Modifier `backend/init_db.py` (schéma, CSV, mappings)
 2. **Incrémenter `SCHEMA_VERSION`** (obligatoire pour déclencher le rebuild)
@@ -215,7 +215,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ---
 
-## 🚢 Déploiement (production)
+## Déploiement (production)
 
 Les fichiers de configuration sont dans `deploy/` :
 
@@ -229,7 +229,7 @@ sudo systemctl enable csr && sudo systemctl start csr
 
 ---
 
-## 🔒 Sécurité
+## Sécurité
 
 - Les identifiants en dur et la `SECRET_KEY` de développement **ne doivent pas** être utilisés en production.
 - Le mode CORS est ouvert (`*`) en dev — à restreindre en production.
@@ -237,6 +237,6 @@ sudo systemctl enable csr && sudo systemctl start csr
 
 ---
 
-## 📖 Documentation technique
+## Documentation technique
 
 Pour une documentation exhaustive (schéma BD, mécanismes internes, architecture frontend, conventions…), voir **[PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)**.
