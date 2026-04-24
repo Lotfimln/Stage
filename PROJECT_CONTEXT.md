@@ -43,7 +43,7 @@ Stage/
 │   ├── init_db.py            # Initialisation BD : schéma + import CSV + propagation + structures
 │   ├── config.py             # Config Oracle legacy (plus utilisée, gardée pour référence)
 │   ├── audit_data.py         # Script d'audit des données (standalone)
-│   ├── requirements.txt      # Flask==3.0.3, Flask-Cors==4.0.1, python-dotenv==1.0.1, PyJWT==2.8.0, gunicorn==22.0.0
+│   ├── requirements.txt      # Flask==3.0.3, Flask-Cors==4.0.1, python-dotenv==1.0.1, PyJWT==2.8.0
 │   └── data/
 │       ├── csr.db            # Base SQLite générée (~1 MB)
 │       ├── Themes.csv        # Thématiques hiérarchiques
@@ -59,11 +59,6 @@ Stage/
 │       ├── core.js           # Module partagé : state, api(), login/logout, isAdmin(), JWT, helpers
 │       ├── app.js            # Logique index.html (arbre, recherche, pickers, requêtes CSR)
 │       └── dashboard.js      # Logique dashboard.html (KPIs, Chart.js, query builder)
-│
-└── deploy/
-    ├── deploy.sh             # Script de déploiement Linux
-    ├── nginx.conf            # Config Nginx reverse proxy
-    └── csr.service           # Systemd service unit
 ```
 
 ---

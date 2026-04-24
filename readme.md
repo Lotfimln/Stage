@@ -53,7 +53,7 @@ Stage/
 │   ├── db.py                 # Couche SQLite (fetch_all, fetch_one, execute) + auto-rebuild
 │   ├── init_db.py            # Schéma + import CSV + propagation + structures
 │   ├── audit_data.py         # Script d'audit standalone
-│   ├── requirements.txt      # Flask, Flask-Cors, PyJWT, python-dotenv, gunicorn
+│   ├── requirements.txt      # Flask, Flask-Cors, PyJWT, python-dotenv
 │   └── data/                 # CSV sources + csr.db (généré, gitignored)
 │
 ├── frontend/
@@ -64,11 +64,6 @@ Stage/
 │       ├── core.js           # Module partagé (state, api, auth, isAdmin)
 │       ├── app.js            # Logique page principale
 │       └── dashboard.js      # Logique dashboard
-│
-└── deploy/
-    ├── deploy.sh             # Script de déploiement Linux
-    ├── nginx.conf            # Reverse proxy Nginx
-    └── csr.service           # Service systemd (gunicorn)
 ```
 
 ---
@@ -217,15 +212,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ## Déploiement (production)
 
-Les fichiers de configuration sont dans `deploy/` :
-
-```bash
-# Copier le projet sur le serveur
-# Configurer nginx (deploy/nginx.conf)
-# Installer le service systemd (deploy/csr.service)
-# Lancer :
-sudo systemctl enable csr && sudo systemctl start csr
-```
+Le déploiement en production se fera sur l'infrastructure de l'IRIT (serveurs internes / intranet). La configuration serveur (reverse proxy, service, SSL…) sera adaptée en fonction de l'environnement cible.
 
 ---
 

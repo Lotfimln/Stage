@@ -1225,20 +1225,30 @@ def structures_find():
 
 # --------- DASHBOARD STATS ---------
 
+def _manu_filter(alias=""):
+    """Return SQL clause to filter manual-only positionings when ?mode=manu.
+    Default is 'manu'. Pass ?mode=all to include auto-propagated ones."""
+    mode = (request.args.get("mode") or "manu").lower()
+    if mode == "all":
+        return "1=1"  # no filter
+    pfx = (alias + ".") if alias else ""
+    return f"({pfx}AUTO_GENERE IS NULL OR {pfx}AUTO_GENERE <> 'O')"
+
 @app.get("/api/stats/overview")
 @require_auth
 def stats_overview():
-    sql = """
+    mf = _manu_filter()
+    sql = f"""
     SELECT
-      (SELECT COUNT(DISTINCT IDPERS) FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent') AS people_present,
+      (SELECT COUNT(DISTINCT IDPERS) FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent' AND {mf}) AS people_present,
       (SELECT COUNT(*) FROM PERSONNE)
-        - (SELECT COUNT(DISTINCT IDPERS) FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent') AS non_positionnes,
-      (SELECT COUNT(DISTINCT IDTHEME) FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent') AS themes_active,
+        - (SELECT COUNT(DISTINCT IDPERS) FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent' AND {mf}) AS non_positionnes,
+      (SELECT COUNT(DISTINCT IDTHEME) FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent' AND {mf}) AS themes_active,
       (SELECT COUNT(DISTINCT IDSTRUCTURE)
-         FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent' AND IDSTRUCTURE IS NOT NULL) AS structures_active,
+         FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent' AND IDSTRUCTURE IS NOT NULL AND {mf}) AS structures_active,
       (SELECT ROUND(AVG(cnt), 2) FROM (
          SELECT IDPERS, COUNT(DISTINCT IDTHEME) cnt
-         FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent' GROUP BY IDPERS
+         FROM POSITIONNEMENT WHERE LIBELLETEMPORALITE = 'Présent' AND {mf} GROUP BY IDPERS
       )) AS themes_per_person
     """
     row = fetch_one(sql, {})
@@ -1249,7 +1259,8 @@ def stats_overview():
 @require_auth
 def stats_top_themes():
     limit = int(request.args.get("limit", 10))
-    sql = """
+    mf = _manu_filter("p")
+    sql = f"""
     SELECT
         t."CS_TH_COD#" AS id,
         t.THEME      AS label,
@@ -1257,6 +1268,7 @@ def stats_top_themes():
     FROM POSITIONNEMENT p
     JOIN THEMES t ON t."CS_TH_COD#" = p.IDTHEME
     WHERE p.LIBELLETEMPORALITE = 'Présent'
+      AND {mf}
     GROUP BY t."CS_TH_COD#", t.THEME
     ORDER BY cnt DESC
     LIMIT :limit
@@ -1269,7 +1281,8 @@ def stats_top_themes():
 @require_auth
 def stats_top_structures():
     limit = int(request.args.get("limit", 10))
-    sql = """
+    mf = _manu_filter("p")
+    sql = f"""
     SELECT
         p.IDSTRUCTURE AS id,
         COALESCE(p.LIBELLESTRUCTURE, CAST(p.IDSTRUCTURE AS TEXT)) AS label,
@@ -1277,6 +1290,7 @@ def stats_top_structures():
     FROM POSITIONNEMENT p
     WHERE p.IDSTRUCTURE IS NOT NULL
       AND p.LIBELLETEMPORALITE = 'Présent'
+      AND {mf}
     GROUP BY p.IDSTRUCTURE, COALESCE(p.LIBELLESTRUCTURE, CAST(p.IDSTRUCTURE AS TEXT))
     ORDER BY cnt DESC
     LIMIT :limit
@@ -1288,18 +1302,21 @@ def stats_top_structures():
 @app.get("/api/stats/distribution")
 @require_auth
 def stats_distribution():
-    sql_role = """
+    mf = _manu_filter()
+    sql_role = f"""
       SELECT COALESCE(LIBCONTRIBUTION,'(N/A)') AS label,
              COUNT(DISTINCT IDPERS) AS cnt
       FROM POSITIONNEMENT
       WHERE LIBELLETEMPORALITE = 'Présent'
+        AND {mf}
       GROUP BY COALESCE(LIBCONTRIBUTION,'(N/A)')
       ORDER BY cnt DESC
     """
-    sql_temp = """
+    sql_temp = f"""
       SELECT COALESCE(LIBELLETEMPORALITE,'(N/A)') AS label,
              COUNT(DISTINCT IDPERS) AS cnt
       FROM POSITIONNEMENT
+      WHERE {mf}
       GROUP BY COALESCE(LIBELLETEMPORALITE,'(N/A)')
       ORDER BY cnt DESC
     """
@@ -1311,8 +1328,10 @@ def stats_distribution():
 @app.get("/api/stats/themes_no_expert")
 @require_auth
 def stats_themes_no_expert():
-    """Themes covered by Contributeur/Utilisateur only, with no Expert (Présent, manual)."""
-    sql = """
+    """Themes covered by Contributeur/Utilisateur only, with no Expert (Présent)."""
+    mf_p = _manu_filter("p")
+    mf_pe = _manu_filter("pe")
+    sql = f"""
     WITH RECURSIVE anc AS (
       SELECT "CS_TH_COD#" AS tid, THEME_PARENT AS pid,
              CAST(THEME AS TEXT) AS path
@@ -1335,14 +1354,14 @@ def stats_themes_no_expert():
         SELECT 1 FROM POSITIONNEMENT p
         WHERE p.IDTHEME = t."CS_TH_COD#"
           AND p.LIBELLETEMPORALITE = 'Présent'
-          AND (p.AUTO_GENERE IS NULL OR p.AUTO_GENERE <> 'O')
+          AND {mf_p}
       )
       AND NOT EXISTS (
         SELECT 1 FROM POSITIONNEMENT pe
         WHERE pe.IDTHEME = t."CS_TH_COD#"
           AND pe.LIBCONTRIBUTION = 'Expert'
           AND pe.LIBELLETEMPORALITE = 'Présent'
-          AND (pe.AUTO_GENERE IS NULL OR pe.AUTO_GENERE <> 'O')
+          AND {mf_pe}
       )
     ORDER BY t.THEME
     """
@@ -1354,12 +1373,14 @@ def stats_themes_no_expert():
 @require_auth
 def stats_themes_per_person():
     """Distribution: how many people cover 1, 2, 3... N themes (Présent only)."""
-    sql = """
+    mf = _manu_filter()
+    sql = f"""
     SELECT theme_count AS bucket, COUNT(*) AS people
     FROM (
       SELECT IDPERS, COUNT(DISTINCT IDTHEME) AS theme_count
       FROM POSITIONNEMENT
       WHERE LIBELLETEMPORALITE = 'Présent'
+        AND {mf}
       GROUP BY IDPERS
     )
     GROUP BY theme_count
@@ -1372,8 +1393,9 @@ def stats_themes_per_person():
 @app.get("/api/stats/top_structures_diversity")
 @require_auth
 def stats_top_structures_diversity():
-    """Top structures by number of distinct manual present themes covered."""
-    sql = """
+    """Top structures by number of distinct themes covered."""
+    mf = _manu_filter("pos")
+    sql = f"""
     SELECT 
         COALESCE(s.acronyme || ' — ', '') || pos.LIBELLESTRUCTURE AS label, 
         COUNT(DISTINCT pos.IDTHEME) AS total
@@ -1381,7 +1403,7 @@ def stats_top_structures_diversity():
     LEFT JOIN STRUCTURES s ON s.id = pos.IDSTRUCTURE
     WHERE pos.LIBELLETEMPORALITE = 'Présent'
       AND pos.LIBELLESTRUCTURE IS NOT NULL
-      AND (pos.AUTO_GENERE IS NULL OR pos.AUTO_GENERE <> 'O')
+      AND {mf}
     GROUP BY pos.IDSTRUCTURE, pos.LIBELLESTRUCTURE, s.acronyme
     ORDER BY total DESC
     """
@@ -1390,14 +1412,15 @@ def stats_top_structures_diversity():
 @app.get("/api/stats/top_researchers")
 @require_auth
 def stats_top_researchers():
-    """Top 15 researchers with the highest number of manual present themes.
+    """Top 15 researchers with the highest number of present themes.
     Viewers see anonymised labels ('Chercheur #1', etc.)."""
-    sql = """
+    mf = _manu_filter("pos")
+    sql = f"""
     SELECT p."PE_PE_COD#" AS id, p.PE_PE_NOM || ' ' || p.PE_PE_PRENOM AS label, COUNT(DISTINCT pos.IDTHEME) AS total
     FROM POSITIONNEMENT pos
     JOIN PERSONNE p ON p."PE_PE_COD#" = pos.IDPERS
     WHERE pos.LIBELLETEMPORALITE = 'Présent'
-      AND (pos.AUTO_GENERE IS NULL OR pos.AUTO_GENERE <> 'O')
+      AND {mf}
     GROUP BY p."PE_PE_COD#", p.PE_PE_NOM, p.PE_PE_PRENOM
     ORDER BY total DESC
     LIMIT 15
@@ -1412,7 +1435,8 @@ def stats_top_researchers():
 @require_auth
 def stats_all_structures():
     """Return all structures with their member count (Présent only), sorted by count."""
-    sql = """
+    mf = _manu_filter("p")
+    sql = f"""
     SELECT
         p.IDSTRUCTURE AS id,
         COALESCE(s.acronyme, CAST(p.IDSTRUCTURE AS TEXT)) AS acronyme,
@@ -1422,6 +1446,7 @@ def stats_all_structures():
     LEFT JOIN STRUCTURES s ON s.id = p.IDSTRUCTURE
     WHERE p.IDSTRUCTURE IS NOT NULL
       AND p.LIBELLETEMPORALITE = 'Présent'
+      AND {mf}
     GROUP BY p.IDSTRUCTURE
     ORDER BY cnt DESC
     """
@@ -1433,7 +1458,8 @@ def stats_all_structures():
 @require_auth
 def stats_themes_coverage():
     """Return level-1 themes (NIVEAU=1) with role breakdown (Expert/Contributeur/Utilisateur)."""
-    sql = """
+    mf = _manu_filter("p")
+    sql = f"""
     SELECT
         t."CS_TH_COD#" AS id,
         t.THEME AS label,
@@ -1445,7 +1471,7 @@ def stats_themes_coverage():
     JOIN POSITIONNEMENT p ON p.IDTHEME = t."CS_TH_COD#"
     WHERE t.NIVEAU = 1
       AND p.LIBELLETEMPORALITE = 'Présent'
-      AND (p.AUTO_GENERE IS NULL OR p.AUTO_GENERE <> 'O')
+      AND {mf}
     GROUP BY t."CS_TH_COD#", t.THEME
     ORDER BY total DESC
     """
@@ -1458,20 +1484,22 @@ def people_count():
     sid = request.args.get("structure_id", type=int)
     tid = request.args.get("theme_id", type=int)
     limit = int(request.args.get("limit", 15))
+    mf = _manu_filter("p")
 
     if sid and tid:
-        sql = """
+        sql = f"""
           SELECT COUNT(DISTINCT p.IDPERS) AS cnt
           FROM POSITIONNEMENT p
           WHERE p.LIBELLETEMPORALITE = 'Présent'
             AND p.IDSTRUCTURE = :sid
             AND p.IDTHEME = :tid
+            AND {mf}
         """
         row = fetch_one(sql, {"sid": sid, "tid": tid})
         return jsonify({"count": int(row.get("cnt", 0))})
 
     if sid and not tid:
-        sql = """
+        sql = f"""
         SELECT t."CS_TH_COD#" AS id,
                t.THEME      AS label,
                COUNT(DISTINCT p.IDPERS) AS cnt
@@ -1479,6 +1507,7 @@ def people_count():
         JOIN THEMES t ON t."CS_TH_COD#" = p.IDTHEME
         WHERE p.LIBELLETEMPORALITE = 'Présent'
           AND p.IDSTRUCTURE = :sid
+          AND {mf}
         GROUP BY t."CS_TH_COD#", t.THEME
         ORDER BY cnt DESC
         LIMIT :limit
@@ -1487,7 +1516,7 @@ def people_count():
         return jsonify({"by": "theme", "rows": rows})
 
     if tid and not sid:
-        sql = """
+        sql = f"""
         SELECT p.IDSTRUCTURE AS id,
                COALESCE(p.LIBELLESTRUCTURE, CAST(p.IDSTRUCTURE AS TEXT)) AS label,
                COUNT(DISTINCT p.IDPERS) AS cnt
@@ -1495,6 +1524,7 @@ def people_count():
         WHERE p.LIBELLETEMPORALITE = 'Présent'
           AND p.IDTHEME = :tid
           AND p.IDSTRUCTURE IS NOT NULL
+          AND {mf}
         GROUP BY p.IDSTRUCTURE, COALESCE(p.LIBELLESTRUCTURE, CAST(p.IDSTRUCTURE AS TEXT))
         ORDER BY cnt DESC
         LIMIT :limit

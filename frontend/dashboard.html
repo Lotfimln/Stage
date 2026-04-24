@@ -29,8 +29,16 @@
   <div class="dashboard-layout">
 
     <!-- Header -->
-    <div class="dashboard-header">
-      <h1>Dashboard</h1>
+    <div class="dashboard-header" style="display:flex; align-items:center; gap:var(--space-lg); flex-wrap:wrap;">
+      <h1 style="margin:0;">Dashboard</h1>
+      <div class="mode-toggle" id="modeToggle" style="display:flex; align-items:center; gap:8px; font-size:var(--font-size-sm);">
+        <span id="modeLabel" style="color:var(--color-text-muted);">Positionnements manuels uniquement</span>
+        <label class="switch" style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0;">
+          <input type="checkbox" id="modeSwitch">
+          <span class="switch-slider"></span>
+        </label>
+        <span style="color:var(--color-text-muted);">Tous</span>
+      </div>
     </div>
 
     <!-- KPIs -->

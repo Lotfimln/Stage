@@ -5,6 +5,13 @@
   const $$ = (s) => Array.from(document.querySelectorAll(s));
   const shorten = (s, n=40) => (s && s.length>n ? s.slice(0,n-1)+'…' : (s||'(N/A)'));
 
+  // ---------- Mode toggle (manu / all)
+  function getMode() {
+    const sw = document.getElementById('modeSwitch');
+    return (sw && sw.checked) ? 'all' : 'manu';
+  }
+  function modeParam(sep='?') { return `${sep}mode=${getMode()}`; }
+
   // ---------- Thème Chart.js sombre
   const baseOpts = {
     responsive: true, maintainAspectRatio: false,
@@ -90,7 +97,7 @@ function enableZoom(canvas, chart, title = "") {
   // ========== KPIs ==========
   async function loadKPIs(){
     try{
-      const o = await api("/api/stats/overview");
+      const o = await api("/api/stats/overview" + modeParam());
       // tolérant aux champs
       const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent = (v ?? "—"); };
       const peopleTotal   = o.people_present ?? (typeof o.people_total==="number" && typeof o.non_positionnes==="number" ? o.people_total - o.non_positionnes : o.people_total);
@@ -106,7 +113,7 @@ function enableZoom(canvas, chart, title = "") {
   const charts = {};
   async function loadTopCharts(){
     try{
-      const themes = await api("/api/stats/top/themes?limit=10");
+      const themes = await api("/api/stats/top/themes?limit=10&mode=" + getMode());
       const c1 = document.getElementById("chTopThemes")?.getContext("2d");
       if (c1){
         const chart = new Chart(c1, {
@@ -126,7 +133,7 @@ function enableZoom(canvas, chart, title = "") {
   // ========== Thèmes sans expert ==========
   async function loadThemesNoExpert(){
     try{
-      const rows = await api("/api/stats/themes_no_expert");
+      const rows = await api("/api/stats/themes_no_expert" + modeParam());
       const box = document.getElementById("noExpertList");
       if (!box || !rows?.length) return;
       const hdr = `<table style="width:100%; border-collapse:collapse; font-size:12px;">
@@ -385,7 +392,7 @@ function enableZoom(canvas, chart, title = "") {
   // ========== Distribution thèmes par personne ==========
   async function loadThemesPerPerson(){
     try{
-      const rows = await api("/api/stats/themes_per_person");
+      const rows = await api("/api/stats/themes_per_person" + modeParam());
       const ctx = document.getElementById("chThemeDist")?.getContext("2d");
       if (ctx && rows?.length){
         const chart = new Chart(ctx, {
@@ -411,7 +418,7 @@ function enableZoom(canvas, chart, title = "") {
   // ========== Effectifs par structure (toutes) ==========
   async function loadAllStructures(){
     try{
-      const rows = await api("/api/stats/all_structures");
+      const rows = await api("/api/stats/all_structures" + modeParam());
       const ctx = document.getElementById("chAllStructs")?.getContext("2d");
       if (ctx && rows?.length){
         const chart = new Chart(ctx, {
@@ -444,7 +451,7 @@ function enableZoom(canvas, chart, title = "") {
   // ========== Couverture thématique niveau 1 ==========
   async function loadThemesCoverage(){
     try{
-      const rows = await api("/api/stats/themes_coverage");
+      const rows = await api("/api/stats/themes_coverage" + modeParam());
       const ctx = document.getElementById("chThemesCoverage")?.getContext("2d");
       if (ctx && rows?.length){
         const chart = new Chart(ctx, {
@@ -617,7 +624,7 @@ function enableZoom(canvas, chart, title = "") {
     // ===================== NOUVEAUX WIDGETS =====================
     async function loadTopStructuresDiversity() {
       try {
-        const rows = await api("/api/stats/top_structures_diversity");
+        const rows = await api("/api/stats/top_structures_diversity" + modeParam());
         const box = document.getElementById("topStructuresDivList");
         if (!box || !rows?.length) return;
         const hdr = `<table style="width:100%; border-collapse:collapse; font-size:12px;">
@@ -639,7 +646,7 @@ function enableZoom(canvas, chart, title = "") {
 
     async function loadTopResearchers() {
       try {
-        const rows = await api("/api/stats/top_researchers");
+        const rows = await api("/api/stats/top_researchers" + modeParam());
         const box = document.getElementById("topResearchersList");
         if (!box || !rows?.length) return;
         const anonNote = !isAdmin() ? `<div style="margin-bottom:8px;padding:4px 10px;background:rgba(251,191,36,.1);color:#fbbf24;border-radius:6px;font-size:11px;">
@@ -692,6 +699,16 @@ function enableZoom(canvas, chart, title = "") {
       const id = e.target?.id;
       if (id === 'qbRun') { e.preventDefault(); try { runQB(); } catch(err) { console.error(err); } }
       if (id === 'qbCSV') { e.preventDefault(); try { exportQB(); } catch(err) { console.error(err); } }
+    });
+
+    // ---------- Toggle: reload dashboard on mode change
+    document.getElementById('modeSwitch')?.addEventListener('change', () => {
+      // Destroy all existing charts
+      Object.values(charts).forEach(c => { try { c.destroy(); } catch {} });
+      Object.keys(charts).forEach(k => delete charts[k]);
+      // Allow bootDashboardOnce to re-run
+      bootDashboardOnce._did = false;
+      bootDashboardOnce();
     });
 
 
