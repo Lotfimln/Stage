@@ -41,14 +41,12 @@ Stage/
 │   ├── app.py                # Serveur Flask principal (1510 lignes) — TOUS les endpoints
 │   ├── db.py                 # Couche d'accès SQLite (fetch_all, fetch_one, execute) + auto-rebuild
 │   ├── init_db.py            # Initialisation BD : schéma + import CSV + propagation + structures
-│   ├── config.py             # Config Oracle legacy (plus utilisée, gardée pour référence)
 │   ├── audit_data.py         # Script d'audit des données (standalone)
 │   ├── requirements.txt      # Flask==3.0.3, Flask-Cors==4.0.1, python-dotenv==1.0.1, PyJWT==2.8.0
 │   └── data/
 │       ├── csr.db            # Base SQLite générée (~1 MB)
 │       ├── Themes.csv        # Thématiques hiérarchiques
-│       ├── positions.csv     # Positionnements (nouveau dump)
-│       └── original_dump/    # Dumps Oracle originaux
+│       └── positions.csv     # Positionnements (nouveau dump)
 │
 ├── frontend/
 │   ├── index.html            # Page principale (login + exploration + requêtes CSR)
